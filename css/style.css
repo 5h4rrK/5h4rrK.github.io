@@ -9,8 +9,8 @@
     font-family: 'Press Start 2P';
     }
 
-@media (min-width: 768px){
- body {
+@media screen and (min-width: 768px) {
+     body {
     /* background-color: #2e3440; */
     background-color: #2e3440;
     color: #ECEFF4;
@@ -216,16 +216,19 @@ main {
 
 .logo {
     font-size: xx-large;
+    padding: 80px 40px 30px 20px;
+
     animation: sharkmoves 15s linear infinite;
 
 }
 
 }
 
-@media (min-width: 100px) and (max-width: 767px) {
+@media screen and (max-width: 768px) {
 body {
     background-color: #2e3440;
     color: #ECEFF4;
+    font-size: 14px;
 }
 
 header {
@@ -328,19 +331,19 @@ main {
 
 @keyframes sharkmoves {
     0% {
-        transform: translateX(10px) scaleX(1);
+        transform: translateX(768px) scaleX(1);
     }
 
     50% {
-        transform: translateX(-600px) scaleX(1);
+        transform: translateX(-768px) scaleX(1);
     }
 
     51% {
-        transform: translateX(-601px) scaleX(-1);
+        transform: translateX(-769px) scaleX(-1);
     }
 
     100% {
-        transform: translateX(100px) scaleX(-1);
+        transform: translateX(768px) scaleX(-1);
     }
 }
 
