@@ -9,12 +9,11 @@
     font-family: 'Press Start 2P';
     }
 
-@media only screen and (min-width: 600px) {
-    body {
+@media (min-width: 768px){
+ body {
     /* background-color: #2e3440; */
     background-color: #2e3440;
     color: #ECEFF4;
-    min-height: 100vh;
     font-family: 'Open Sans';
     }
 
@@ -223,27 +222,10 @@ main {
 
 }
 
-@media only screen and (max-width: 600px) {
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
-* {
-    margin: 0%;
-    padding: 0%;
-    box-sizing: border-box;
-    font-family: 'Press Start 2P';
-}
-
-header,
-nav ul,
-nav li a {
-    font-family: 'Press Start 2P';
-}
-
+@media (min-width: 100px) and (max-width: 767px) {
 body {
     background-color: #2e3440;
     color: #ECEFF4;
-    min-height: 100vh;
-    font-family: 'Open Sans';
 }
 
 header {
