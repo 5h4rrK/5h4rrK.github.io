@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>ReAL-File-System | ~/home/5h4rrK $</title>
+<meta name="keywords" content="Digital-Forensics, FileSystem, Windows, ctf, Log-Analysis, Forensics">
+<meta name="description" content="Log Analysis of Resilient File Sytem">
+<meta name="author" content="Sabhya Raj">
+<link rel="canonical" href="https://5h4rrK.github.io/posts/resilient-file-system/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.b609c58d5c11bb90b1a54e04005d74ad1ddf22165eb79f5533967e57df9c3b50.css" integrity="sha256-tgnFjVwRu5CxpU4EAF10rR3fIhZet59VM5Z&#43;V9&#43;cO1A=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://5h4rrK.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://5h4rrK.github.io/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://5h4rrK.github.io/favicon-32x32.png">
+<link rel="apple-touch-icon" href="https://5h4rrK.github.io/apple-touch-icon.png">
+<link rel="mask-icon" href="https://5h4rrK.github.io/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><meta property="og:title" content="ReAL-File-System" />
+<meta property="og:description" content="Log Analysis of Resilient File Sytem" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://5h4rrK.github.io/posts/resilient-file-system/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-02-28T23:40:43+05:30" />
+<meta property="article:modified_time" content="2024-02-28T23:40:43+05:30" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="ReAL-File-System"/>
+<meta name="twitter:description" content="Log Analysis of Resilient File Sytem"/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://5h4rrK.github.io/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "ReAL-File-System",
+      "item": "https://5h4rrK.github.io/posts/resilient-file-system/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "ReAL-File-System",
+  "name": "ReAL-File-System",
+  "description": "Log Analysis of Resilient File Sytem",
+  "keywords": [
+    "Digital-Forensics", "FileSystem", "Windows", "ctf", "Log-Analysis", "Forensics"
+  ],
+  "articleBody": "Writeup Challenge Description\nIn a desperate bid to synchronize my PC clock, I unwittingly downloaded an application that promised a quick fix but instead wrought havoc by encrypting all my important files. Turning to my DFIR friend for help, his attempts to decipher the encrypted mess only worsened the situation, leaving the filesystem corrupted. My friend told me that only a DFIR expert can help recover my files. I’m filled with hope for their assistance in fixing my computer catastrophe.\nQuestions Question 1 List all directories that have been renamed, including their original names and the timestamps of when they were renamed.\nTimeZone - UTC(+05:30) [YYYY-MM-DD HH:MM:SS.XX] Format - [ ['OriginalDirName', 'RenamedDirName', 'TimeStamp'] , .. ] Question 2 Name all the deleted directories with deletion timestamps.\nTimeZone : UTC(+05:30) [YYYY-MM-DD HH:MM:SS.XX] Format - [ ['DirectoryName' , 'TimeStamp'] , .. ] Question 3 List all directories with their creation times, including originals if any that have been renamed or deleted.\nTimeZone : UTC(+05:30) [YYYY-MM-DD HH:MM:SS.XX] Format - [ ['DirectoryName' , 'CreatedTime'] , .... ] Question 4 Recover the files that have been deleted, and provide the md5sum of each recovered file.\nFormat - [ ['file1hash'] , ['file2hash'], ... ] Question 5 Identify all files that have been deleted (Simple + Permanent), including their deletion timestamps.\nTimeZone : UTC(+05:30) [YYYY-MM-DD HH:MM:SS.XX] Format - [ [ 'filename' , 'TimeStamp' , 'Simple/Permanent' ] , .. ] Question 6 Restore all encrypted files, decrypt them, and provide the md5sum of each decrypted file after removing any extra bytes before computing the hash.\nFormat - [ ['hash1'] , ['hash2'], ',..] References Deletion Pattern in ReFS\nForensic Analysis of ReFS Journaling\nReverse Engineering of ReFS\nAwesome ReFS Investigation tool\nReFS Detector\nAccording to description, the file System is corrupt. Let’s start with fixing it. To fix it, We can open it in Hex Editior. The Resilient File System is not supported by most of the forensics tool so, we are referring to the research papers for its structures.\nLatest version of Active Disk Editor supports the ReFS, so can be used for loading the image to verify whether it’s corrupted or not. Let’s begin repairing the file system. Cluster Size = Bytes Per Sector * Sectors Per Cluster\nCluster Size : 0x1000\nSuperBlock There are 3 SuperBlocks, one located at starting and two are at the end of the file system.\nThese are for the backups to avoid the failure.\nAll contains LCN which points to the primary and secondary Checkpoint.\nCheckPoint Similarly, There are 2 CheckPoints.\nIt contains ReFS version information, Entry Size and Entry Offset relative in position.\nAt offset 0xD0 , the 4 bytes are the number of offsets to entries of Object Table, Container Table, Directory Tree etc.\nNavigating those offsets, we can find the offsets to MSB+ standard nodes.\nNote : ReFS v3.2 has signature MSB+ whereas ReFS 1.2 has not any signature.\nThe LCN(1) serves as a way to locate the associated SuperBlock, similarly does for the Checkpoint.\nWithin the system, there are three SuperBlocks and two Checkpoints.\nFixing either one of the SuperBlocks or Checkpoints will resolve the issue.\nIt just acts path to reach a point from where it starts parsing the nodes. So, corrupting the Superblock and Checkpoint cause failure of the file system.\nLCN1 : 0x1e =\u003e [0x1e * 0x1000 = 0x1e000 (offset of Superblock)] LCN1 : 0x0f7ffd LCN1 : 0x0f7ffe LCN1 : 0x27d0 LCN1 : 0x01dc48 Now, Let’s open it in Active Disk Editor and it works fine. ReFS stores logs in LogFile as NTFS do. But, the structure is entirely new.\nThe opcodes of LogFile is different from the opcodes of NTFS $LogFile.\nThe opcodes of ReFS only do redo operation whereas NTFS do redo and undo operation.\nWe can locate the LogFile by searching MLogand ignores the first two MLog pages these doesn’t stores anything interesting similar to NTFS $LogFile. $LogFile has restart area which is 0x0000 ~ 0x2000 in size.\nLogFile A logfile is a metadata file that stores transactional data to facilitate the recovery of the file system to a consistent state in the event of system crashes and unexpected conditions\nIt helps prevent data loss by ensuring that changes to the file system are recorded in a systematic manner, allowing for proper restoration if needed.\nIt contains changes in metadata of files and directories like CREATE, MOVE, RENAME and DELETE.\nReFS LogFile vs NTFS $LogFile Fig : Redo Structure of ReFS\nFig : Structure of Operation Record\nRead More about NTFS-$LogFile Now, let’s dive into the structure of the ReFS LogFile\nLogFile-Structure LogFile Entry Structure Explanation Red Bounded Area -\u003e ReFS Entry Header\nGreen Bounded Area -\u003e Log Entry Header Redo Log Header Redo Log Header Size : 0x38 bytes\nRedo Data Offset Array Tail Offset : indicates ending of data offset array\nTail Size: size of each transaction\nRedo Transactional Data Example 1 Example 2 Source: ARIN\nExample 3 Extracting Log Files from the File System dd if=ReAL_File_System.001 skip=$((0x20001000)) count=$((0x200A7000 -0x20001000)) of=logs.txt bs=1 Solution Question-1 List all directories that have been renamed, including their original names and the timestamps of when they were renamed.\nFormat :[ [‘OriginalDirName’, ‘RenamedDirName’, TimeStamp] , .. ]\nTo identify renamed directories, search for the opcodes associated with directory renaming. Following these opcodes’ consecutive MLog entries will unveil the timestamps indicating when the renaming occurred.\nSearch for the hexadecimal values 30 00 02 00 in the LogFile, these values serve as prefixes for directories, while 30 00 01 00 is indicative of files. Be aware that there might be some false positives in the results.\nFile Prefix (from ReFS Detector) : 30 01 00 00 80 01 00 00 00 00 00 00 30 00 01 00\n0x2 -\u003e 0x2 -\u003e 0x1 -\u003e 0x1 -\u003e 0x4 Timestamp will be found in next MLog (starting with opcode 0x4).\n['e88e52cac', '88077a4a1370', '2024-02-18 13:10:20.49']\nSimilarly, We can write a script to make our task easy.\n['fb828d071', 'cad090f9724d', '2024-02-18 13:12:12.48']\nFinal Ans\n[ ['e88e52cac', '88077a4a1370', '2024-02-18 13:10:20.49'], ['fb828d071','cad090f9724d', '2024-02-18 13:12:12.48'] ] Name all the deleted directories with deletion timestamps.\nFormat : [ [‘DirectoryName’ , ‘TimeStamp’] , .. ]\n0x2 -\u003e 0xf -\u003e 0x2 -\u003e 0xf -\u003e 0x4 -\u003e 0x12 Remaining opcodes can be found in MLog.\nPermanently Deleted Directories\n[ ['f8f1c218f9', '2024-02-18 13:11:28.57'], ['de34f60ab', '2024-02-18 13:13:19.60'] ] Simple Directory Deletion Opcode P(Directory Creation) → 0x06 → 0x04 → 0x04 → 0x04 → 0x04 → 0x03 → 0x02 → 0x02 → 0x01 → 0x01 → 0x0e → 0x04 → 0x03 → 0x04 → 0x04 → 0x04 → 0x01 → 0x04 → 0x03 → 0x04 → 0x04 → 0x08 ['c062fb828', '2024-02-18 13:10:48.62'] OR,\nSimple Deletion Timestamp can be found through analyzing $IXXXXX\nFinal Ans\n[ ['f8f1c218f9', '2024-02-18 13:11:28.57'], ['de34f60ab', '2024-02-18 13:13:19.60'], ['c062fb828', '2024-02-18 13:10:48.62'] ] Question -3 List all directories with their creation times, including renamed and deleted.\nNote : If a directory was renamed, include its original name and creation time.\nFomat : [ [‘DirectoryName’ , ‘CreatedTime’] , …. ]\nDir Creation 0x00 → 0x00 → 0x04 → 0x10 → 0x01 → 0x01 → 0x01 → 0x0e → 0x03 → 0x04 Final Ans\n[ ['de34f60ab', '2024-02-18 13:06:59.22'], ['e88e52cac', '2024-02-18 13:07:31.13'], ['fb828d071', '2024-02-18 13:08:13.88'], ['f8f1c218f9','2024-02-18 13:08:40.58'], ['c062fb828', '2024-02-18 13:09:14.55'], ['bb6de6190', '2024-02-18 13:09:34.00'] ] Question - 4 Recover the files that have been deleted, and provide the md5sum of each recovered file.\nFormat : [ [‘file1hash’]’ , [‘file2hash2’], … ]\nLoad the disk image in Active Disk Editor\n$IXXXXX file has components like filename, fullpath , deletion time etc.\n$RXXXXX file contents can be recovered.\n3 files are simply deleted.\nThe dd command can be utilized to extract a file from an image file, with the option to enhance extraction speed by increasing the block-size.\nDivide the skip and count by block-size.\nCopying and pasting content from Active Disk Editor works for smaller files. However, for larger files, this method won’t work :).\ndd if=ReAL_File_System.001 skip=$(((0x1000 * 71168)/1)) count=$(((0x15a)/1)) bs=1 of=simple-pass.txt dd if=ReAL_File_System.001 skip=$(((0x1000 * 68608)/16)) count=$(((0x04e20)/16)) bs=16 of=19ff211f dd if=ReAL_File_System.001 skip=$(((0x1000 * 70144))) count=$(((0x041b7))) bs=1 of=fe0c329 f91488b7e00c31793bd7aa98c51896d0 simple-pass.txt 4c009b045056af8f9bb401c69408d2cf 19ff211f c50c5bcb9e98537e3d63df1bc68a81d0 fe0c329 Final Ans\n[ ['f91488b7e00c31793bd7aa98c51896d0'], ['4c009b045056af8f9bb401c69408d2cf'], ['c50c5bcb9e98537e3d63df1bc68a81d0'] ] Question - 5 Identify all files that have been deleted (Simple + Permanent), including their deletion timestamps.\nFormat :[ [ ‘filename’ , ‘TimeStamp’ , ‘Simple/Permanent’ ] , .. ]\nSimple Deletion\nPermanent Deletion\nsimple-pass.txt TimeStamp\n2024-02-18 13:15:00.51\nIn the same manner, examine the log file for each alternate file.\n['simple-pass.txt','2024-02-18 13:15:00.51','Simple'], ['19ff211f','2024-02-18 13:14:31.43','Simple'], ['fe0c329','2024-02-18 13:15:52.49','Simple'] For Permanent Files 0x0f -\u003e 0x02 -\u003e 0x0f -\u003e 0x02 -\u003e 0x04 ('ead47cb','2024-02-18 13:19:26.69','Permanent') ('essay.txt','2024-02-18 13:18:22.47','Permanent') Final Ans\n[ ['simple-pass.txt','2024-02-18 13:15:00.51','Simple'], ['19ff211f','2024-02-18 13:14:31.43','Simple'], ['fe0c329','2024-02-18 13:15:52.49','Simple'], ['ead47cb','2024-02-18 13:19:26.69','Permanent'], ['essay.txt','2024-02-18 13:18:22.47','Permanent'] ] Question-6 Restore all encrypted files, decrypt them, and provide the md5sum of each decrypted file after removing any extra bytes before computing the hash.\nFormat :[[‘hash1’], [‘hash2’],..]\nAn Overview on time_update.exe Enumerate each directory and rename all files. Generate a random time and convert it to SystemToFileTime. Generate key1 and append a 4-byte nonce. Compute the MD5 hash of key1 and set it as key2. Rename each file with a random time and encrypt it. Encryption process: enc[i] = file[i] ^ key1[i] ^ key2[i]. Enumerate all files again and update their names with the .tort extension. Before exiting, restore the system time to its initial state. Because it updates the time before encrypting the files, it leaves a trace in the log files that could potentially be used to recover key.\nFile-Decryption The time_update.exe uses two keys key1 and hash of key1 as key2 to encrypt the files.\nTo find key1, we need to locate the second rename timestamp. However, key1 includes an additional 4-byte nonce, which is unknown, necessitating brute force to obtain the correct key1.\nBy cross-referencing the encrypted files in the logfile, we can identify the original filenames and then brute force the files using their headers to determine the nonce.\nSome files only have small byte file signatures, resulting in numerous possible nonces. We can validate these nonces by examining the end-of-file signatures and chunks present in the file.\nOpcode for Renamed File : 0x02 → 0x05 → 0x01 → 0x04 → 0x04\nLet’s manually search for the required information. We’ll begin by assigning filenames with the extension tort and then conduct a search within the log file.\nSpecifically, we’ll focus on identifying the first operation code (opcode) located at offset 0xb0.\nAfter locating it, we’ll parse the data and examine the previous MLog to find the corresponding filenames.\nFirst Rename : 15005-39026.pdf -\u003e bf2f63b3\nSearch for the bf2f63b3\nSecond Rename : bf2f6b3 -\u003e 0cf51fbc\nThe system time is expressed in Coordinated Universal Time (UTC).\nRename Time(Encryption Key) : 2010-02-26 12:38:43.0000000 Enc Key : 2010 2 2 26 12 38 43 0 Third Rename : 0cf51fbc -\u003e 0cf51fbc.tort\nLikewise, find the timestamp used for encryption on all remaining files, and proceed to extract those files accordingly.\nbinary-01.gif -\u003e c7982ef6 -\u003e a917438f -\u003e a917438f.tort : 1995 2 2 27 2 11 42 0\nEverest Vista.webp -\u003e d406327c -\u003e 3a7fab71 -\u003e 3a7fab71.tort : 1990 8 2 28 21 6 35 0\nParanormal Phenomenon.docx -\u003e 830c92a3 -\u003e bb292337 -\u003e bb292337.tort : 1993 7 2 16 17 10 46 0\nso-cappy.jpg -\u003e 141e0f79 -\u003e 24819686 -\u003e 24819686.tort : 2001 4 2 19 8 27 45 0\nstuffs.rar -\u003e f15ebcd2 -\u003e 7a6c7166 -\u003e 7a6c7166.tort : 2009 11 2 22 17 5 55 0\nySq12b0T.mp4 -\u003e 86c66c9c -\u003e 185c65f8 -\u003e 185c65f8.tort : 2007 7 2 28 3 27 33 0\nvl36hkjkzbh91.png -\u003e 313feb6e -\u003e cc876a3b -\u003e cc876a3b.tort : 1985 3 2 4 16 23 53 0\nCarving Out Files 0cf51fbc.tort Let’s take a look at it using Active Disk Editor.\ndd if=ReAL_File_System.001 skip=$(((0x10e94000)/4096)) count=$(((0x16c000)/4096)) bs=4096 of=0cf51fbc_1.tort dd if=ReAL_File_System.001 skip=$(((0x11001000)/4096)) count=$(((0x141000)/4096)) bs=4096 of=0cf51fbc_2.tort cat 0cf51fbc_1.tort 0cf51fbc_2.tort \u003e 0cf51fbc.tort a917438f.tort dd if=ReAL_File_System.001 skip=$(((0x10025000)/64)) count=$(((0x89ce40)/64)) bs=64 of=a917438f.tort After extracting the encrypted files, remove any additional bytes.\n7a6c7166.tort Go to offset 0x108c2000, 0x10c05000 \u0026 read 830 * 0x1000 ,130 * 0x1000bytes respectively\ndd if=ReAL_File_System.001 skip=$(((0x108c2000)/8192)) count=$(((830 * 0x1000)/8192)) bs=8192 of=7a6c7166_1.tort dd if=ReAL_File_System.001 skip=$(((0x10c05000)/4096)) count=$(((130 * 0x1000)/4096)) bs=4096 of=7a6c7166_2.tort cat 7a6c7166_1.tort 7a6c7166_2.tort \u003e 7a6c7166.tort 185c65f8.tort dd if=ReAL_File_System.001 skip=$(((68743 * 0x1000)/4096)) count=$(((525 * 0x1000)/4096)) bs=4096 of=185c65f8.tort 24819686.tort dd if=ReAL_File_System.001 skip=$(((0x12800000)/4096)) count=$(((0x10000)/4096)) bs=4096 of=24819686.tort 3a7fab71.tort dd if=ReAL_File_System.001 skip=$(((0x10000000)/4096)) count=$(((0x25000)/4096)) bs=4096 of=3a7fab71.tort bb292337.tort dd if=ReAL_File_System.001 skip=$(((0x13a00000)/4096)) count=$(((0x8000)/4096)) bs=4096 of=bb292337.tort cc876a3b.tort dd if=ReAL_File_System.001 skip=$(((0x1000 * 72705))) count=$((0x175f)) bs=1 of=cc876a3b.tort Remove extra bytes from the files. import struct file_names = ['0cf51fbc.tort','a917438f.tort','7a6c7166.tort','185c65f8.tort','24819686.tort','3a7fab71.tort','bb292337.tort','cc876a3b.tort'] for _ in file_names: buff = bytes() file = open(_, 'rb') sig = file.read(0x04) sz = struct.unpack(\"",
+  "wordCount" : "2894",
+  "inLanguage": "en",
+  "datePublished": "2024-02-28T23:40:43+05:30",
+  "dateModified": "2024-02-28T23:40:43+05:30",
+  "author":{
+    "@type": "Person",
+    "name": "Sabhya Raj"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://5h4rrK.github.io/posts/resilient-file-system/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "~/home/5h4rrK $",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://5h4rrK.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://5h4rrK.github.io/" accesskey="h" title="~/home/5h4rrK $ (Alt + H)">~/home/5h4rrK $</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://5h4rrK.github.io/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://5h4rrK.github.io/">Home</a>&nbsp;»&nbsp;<a href="https://5h4rrK.github.io/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      ReAL-File-System
+    </h1>
+    <div class="post-meta"><span title='2024-02-28 23:40:43 +0530 IST'>February 28, 2024</span>&nbsp;·&nbsp;14 min&nbsp;·&nbsp;Sabhya Raj
+
+</div>
+  </header> <div class="toc">
+    <details >
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#writeup" aria-label="Writeup">Writeup</a><ul>
+                        
+                <li>
+                    <a href="#question-1" aria-label="Question 1">Question 1</a></li>
+                <li>
+                    <a href="#question-2" aria-label="Question 2">Question 2</a></li>
+                <li>
+                    <a href="#question-3" aria-label="Question 3">Question 3</a></li>
+                <li>
+                    <a href="#question-4" aria-label="Question 4">Question 4</a></li>
+                <li>
+                    <a href="#question-5" aria-label="Question 5">Question 5</a></li>
+                <li>
+                    <a href="#question-6" aria-label="Question 6">Question 6</a></li>
+                <li>
+                    <a href="#references" aria-label="References">References</a><ul>
+                        <ul>
+                        
+                <li>
+                    <a href="#lets-begin-repairing-the-file-system" aria-label="Let&rsquo;s begin repairing the file system.">Let&rsquo;s begin repairing the file system.</a></li></ul>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#superblock" aria-label="SuperBlock">SuperBlock</a></li>
+                <li>
+                    <a href="#checkpoint" aria-label="CheckPoint">CheckPoint</a></li>
+                <li>
+                    <a href="#logfile" aria-label="LogFile">LogFile</a></li>
+                <li>
+                    <a href="#refs-logfile-vs-ntfs-logfile" aria-label="ReFS LogFile vs NTFS $LogFile">ReFS LogFile vs NTFS $LogFile</a></li></ul>
+                </li>
+                <li>
+                    <a href="#logfile-structure" aria-label="LogFile-Structure">LogFile-Structure</a><ul>
+                        
+                <li>
+                    <a href="#logfile-entry-structure" aria-label="LogFile Entry Structure">LogFile Entry Structure</a></li></ul>
+                </li>
+                <li>
+                    <a href="#explanation" aria-label="Explanation">Explanation</a><ul>
+                        
+                <li>
+                    <a href="#redo-log-header" aria-label="Redo Log Header">Redo Log Header</a></li>
+                <li>
+                    <a href="#redo-data-offset-array" aria-label="Redo Data Offset Array">Redo Data Offset Array</a></li>
+                <li>
+                    <a href="#redo-transactional-data" aria-label="Redo Transactional Data">Redo Transactional Data</a></li>
+                <li>
+                    <a href="#example-1" aria-label="Example 1">Example 1</a></li>
+                <li>
+                    <a href="#example-2" aria-label="Example 2">Example 2</a></li>
+                <li>
+                    <a href="#example-3" aria-label="Example 3">Example 3</a></li></ul>
+                </li>
+                <li>
+                    <a href="#extracting-log-files-from-the-file-system" aria-label="Extracting Log Files from the File System">Extracting Log Files from the File System</a></li>
+                <li>
+                    <a href="#solution" aria-label="Solution">Solution</a><ul>
+                        
+                <li>
+                    <a href="#question-1-1" aria-label="Question-1">Question-1</a></li>
+                <li>
+                    <a href="#question--3" aria-label="Question -3">Question -3</a></li>
+                <li>
+                    <a href="#question---4" aria-label="Question - 4">Question - 4</a></li>
+                <li>
+                    <a href="#question---5" aria-label="Question - 5">Question - 5</a><ul>
+                        
+                <li>
+                    <a href="#simple-passtxt" aria-label="simple-pass.txt">simple-pass.txt</a></li>
+                <li>
+                    <a href="#for-permanent-files" aria-label="For Permanent Files">For Permanent Files</a></li></ul>
+                </li></ul>
+                </li>
+                <li>
+                    <a href="#question-6-1" aria-label="Question-6">Question-6</a><ul>
+                        <ul>
+                        <ul>
+                        
+                <li>
+                    <a href="#an-overview-on-time_updateexe" aria-label="An Overview on time_update.exe">An Overview on time_update.exe</a></li>
+                <li>
+                    <a href="#file-decryption" aria-label="File-Decryption">File-Decryption</a></li></ul>
+                    
+                <li>
+                    <a href="#carving-out-files" aria-label="Carving Out Files">Carving Out Files</a><ul>
+                        <ul>
+                        
+                <li>
+                    <a href="#0cf51fbctort" aria-label="0cf51fbc.tort">0cf51fbc.tort</a></li>
+                <li>
+                    <a href="#a917438ftort" aria-label="a917438f.tort">a917438f.tort</a></li>
+                <li>
+                    <a href="#7a6c7166tort" aria-label="7a6c7166.tort">7a6c7166.tort</a></li>
+                <li>
+                    <a href="#185c65f8tort" aria-label="185c65f8.tort">185c65f8.tort</a></li>
+                <li>
+                    <a href="#24819686tort" aria-label="24819686.tort">24819686.tort</a></li>
+                <li>
+                    <a href="#3a7fab71tort" aria-label="3a7fab71.tort">3a7fab71.tort</a></li>
+                <li>
+                    <a href="#bb292337tort" aria-label="bb292337.tort">bb292337.tort</a></li>
+                <li>
+                    <a href="#cc876a3btort" aria-label="cc876a3b.tort">cc876a3b.tort</a></li>
+                <li>
+                    <a href="#remove-extra-bytes-from-the-files" aria-label="Remove extra bytes from the files.">Remove extra bytes from the files.</a></li></ul>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#file_decryption_part" aria-label="File_Decryption_Part">File_Decryption_Part</a></li></ul>
+                    
+                <li>
+                    <a href="#final-ans" aria-label="Final Ans">Final Ans</a>
+                </li>
+            </ul>
+            </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h2 id="writeup">Writeup<a hidden class="anchor" aria-hidden="true" href="#writeup">#</a></h2>
+<p><strong>Challenge Description</strong></p>
+<p>In a desperate bid to synchronize my PC clock, I unwittingly downloaded an application that promised a quick fix but instead wrought havoc by encrypting all my important files. Turning to my DFIR friend for help, his attempts to decipher the encrypted mess only worsened the situation, leaving the filesystem corrupted. My friend told me that only a DFIR expert can help recover my files. I&rsquo;m filled with hope for their assistance in fixing my computer catastrophe.</p>
+<p><img loading="lazy" src="images/image-334.png" alt="AltText"  />
+</p>
+<details>
+<summary>Questions </summary>
+<h3 id="question-1"><strong>Question 1</strong><a hidden class="anchor" aria-hidden="true" href="#question-1">#</a></h3>
+<p><strong>List all directories that have been renamed, including their original names and the timestamps of when they were renamed.</strong></p>
+<pre><code>TimeZone - UTC(+05:30) [YYYY-MM-DD HH:MM:SS.XX]
+Format - [ ['OriginalDirName', 'RenamedDirName', 'TimeStamp'] , .. ]
+</code></pre>
+<h3 id="question-2"><strong>Question 2</strong><a hidden class="anchor" aria-hidden="true" href="#question-2">#</a></h3>
+<p><strong>Name all the deleted directories with deletion timestamps.</strong></p>
+<pre><code>TimeZone : UTC(+05:30) [YYYY-MM-DD HH:MM:SS.XX]
+Format - [ ['DirectoryName' , 'TimeStamp'] , .. ]
+</code></pre>
+<h3 id="question-3"><strong>Question 3</strong><a hidden class="anchor" aria-hidden="true" href="#question-3">#</a></h3>
+<p><strong>List all directories with their creation times, including originals if any that have been renamed or deleted.</strong></p>
+<pre><code>TimeZone : UTC(+05:30) [YYYY-MM-DD HH:MM:SS.XX]
+Format - [ ['DirectoryName' , 'CreatedTime'] , .... ]
+</code></pre>
+<h3 id="question-4"><strong>Question 4</strong><a hidden class="anchor" aria-hidden="true" href="#question-4">#</a></h3>
+<p><strong>Recover the files that have been deleted, and provide the md5sum of each recovered file.</strong></p>
+<pre><code>Format - [ ['file1hash'] , ['file2hash'], ... ]
+</code></pre>
+<h3 id="question-5"><strong>Question 5</strong><a hidden class="anchor" aria-hidden="true" href="#question-5">#</a></h3>
+<p><strong>Identify all files that have been deleted (Simple + Permanent), including their deletion timestamps.</strong></p>
+<pre><code>TimeZone : UTC(+05:30) [YYYY-MM-DD HH:MM:SS.XX]
+Format - [ [ 'filename' , 'TimeStamp' , 'Simple/Permanent' ] , .. ]
+</code></pre>
+<h3 id="question-6"><strong>Question 6</strong><a hidden class="anchor" aria-hidden="true" href="#question-6">#</a></h3>
+<p><strong>Restore all encrypted files, decrypt them, and provide the md5sum of each decrypted file after removing any extra bytes before computing the hash.</strong></p>
+<pre><code>Format - [ ['hash1'] , ['hash2'], ',..]
+</code></pre>
+</details>
+<h3 id="references">References<a hidden class="anchor" aria-hidden="true" href="#references">#</a></h3>
+<ul>
+<li>
+<p><a href="https://www.sciencedirect.com/science/article/pii/S2666281723001191?ref=pdf_download&amp;fr=RR-2&amp;rr=857d87e5a8047866">Deletion Pattern in ReFS</a></p>
+</li>
+<li>
+<p><a href="https://www.sciencedirect.com/science/article/pii/S2666281721000342?ref=pdf_download&amp;fr=RR-2&amp;rr=857d87e5a8037866">Forensic Analysis of ReFS Journaling</a></p>
+</li>
+<li>
+<p><a href="https://www.sciencedirect.com/science/article/pii/S1742287619301252?ref=pdf_download&amp;fr=RR-2&amp;rr=858e699298bd7868">Reverse Engineering of ReFS</a></p>
+</li>
+<li>
+<p><a href="https://github.com/horensic/ARIN">Awesome ReFS Investigation tool</a></p>
+</li>
+<li>
+<p><a href="https://github.com/jamemanionda/ReFS_Detector">ReFS Detector</a></p>
+</li>
+</ul>
+<hr>
+<p>According to description, the file System is corrupt. Let&rsquo;s start with fixing it. To fix it, We can open it in <code>Hex Editior</code>. The <code>Resilient File System</code> is not supported by most of the forensics tool so, we are referring to the research papers for its structures.</p>
+<ul>
+<li>Latest version of <code>Active Disk Editor</code> supports the ReFS, so can be used for loading the image to verify whether it&rsquo;s corrupted or not.</li>
+</ul>
+<p><img loading="lazy" src="images/image-200.png" alt="AltText"  />
+</p>
+<h5 id="lets-begin-repairing-the-file-system">Let&rsquo;s begin repairing the file system.<a hidden class="anchor" aria-hidden="true" href="#lets-begin-repairing-the-file-system">#</a></h5>
+<p><img loading="lazy" src="images/image-104.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-106.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-109.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-107.png" alt="AltText"  />
+</p>
+<ul>
+<li>
+<p>Cluster Size = <code>Bytes Per Sector * Sectors Per Cluster</code></p>
+</li>
+<li>
+<p>Cluster Size : <code>0x1000</code></p>
+</li>
+</ul>
+<h3 id="superblock">SuperBlock<a hidden class="anchor" aria-hidden="true" href="#superblock">#</a></h3>
+<p><img loading="lazy" src="image.png" alt="alt text"  />
+</p>
+<ul>
+<li>
+<p>There are 3 SuperBlocks, one located at starting and two are at the end of the file system.</p>
+</li>
+<li>
+<p>These are for the backups to avoid the failure.</p>
+</li>
+<li>
+<p>All contains <code>LCN</code> which points to the primary and secondary Checkpoint.</p>
+</li>
+</ul>
+<h3 id="checkpoint">CheckPoint<a hidden class="anchor" aria-hidden="true" href="#checkpoint">#</a></h3>
+<p><img loading="lazy" src="image-1.png" alt="alt text"  />
+</p>
+<ul>
+<li>
+<p>Similarly, There are 2 CheckPoints.</p>
+</li>
+<li>
+<p>It contains <code>ReFS</code> version information, <code>Entry Size</code> and <code>Entry Offset</code> relative in position.</p>
+</li>
+<li>
+<p>At offset <code>0xD0</code> , the 4 bytes are the number of offsets to entries of Object Table, Container Table, Directory Tree etc.</p>
+</li>
+<li>
+<p>Navigating those offsets, we can find the offsets to <code>MSB+</code> standard nodes.</p>
+</li>
+<li>
+<p>Note : ReFS v3.2 has signature <code>MSB+</code> whereas ReFS 1.2 has not any signature.</p>
+</li>
+</ul>
+<p><img loading="lazy" src="images/image-333.png" alt="AltText"  />
+</p>
+<ul>
+<li>
+<p>The LCN(1) serves as a way to locate the associated SuperBlock, similarly does for the Checkpoint.</p>
+</li>
+<li>
+<p>Within the system, there are three SuperBlocks and two Checkpoints.</p>
+</li>
+<li>
+<p>Fixing either one of the SuperBlocks or Checkpoints will resolve the issue.</p>
+</li>
+<li>
+<p>It just acts path to reach a point from where it starts parsing the nodes. So, corrupting the <code>Superblock</code> and <code>Checkpoint</code> cause failure of the file system.</p>
+</li>
+</ul>
+<p><img loading="lazy" src="images/image-101.png" alt="AltText"  />
+</p>
+<ul>
+<li>LCN1 : <code>0x1e</code> =&gt; <code>[0x1e * 0x1000 = 0x1e000 (offset of Superblock)]</code></li>
+</ul>
+<p><img loading="lazy" src="images/image-102.png" alt="AltText"  />
+</p>
+<ul>
+<li>LCN1 : <code>0x0f7ffd</code></li>
+</ul>
+<p><img loading="lazy" src="images/image-103.png" alt="AltText"  />
+</p>
+<ul>
+<li>LCN1 : <code>0x0f7ffe</code></li>
+</ul>
+<p><img loading="lazy" src="images/image100.png" alt="AltText"  />
+</p>
+<ul>
+<li>LCN1 : <code>0x27d0</code></li>
+</ul>
+<p><img loading="lazy" src="images/image.png" alt="AltText"  />
+</p>
+<ul>
+<li>LCN1 : <code>0x01dc48</code></li>
+</ul>
+<ul>
+<li>Now, Let&rsquo;s open it in <code>Active Disk Editor</code> and it works fine.</li>
+</ul>
+<p><img loading="lazy" src="images/image-105.png" alt="AltText"  />
+</p>
+<ul>
+<li>
+<p>ReFS stores logs in <code>LogFile</code> as NTFS do. But, the structure is entirely new.</p>
+</li>
+<li>
+<p>The opcodes of <code>LogFile</code> is different from the opcodes of NTFS <code>$LogFile</code>.</p>
+</li>
+<li>
+<p>The opcodes of ReFS only do <code>redo</code> operation whereas NTFS do <code>redo</code> and <code>undo</code> operation.</p>
+</li>
+<li>
+<p>We can locate the LogFile by searching <code>MLog</code>and ignores the first two <code>MLog</code> pages these doesn&rsquo;t stores anything interesting similar to NTFS <code>$LogFile</code>. <code>$LogFile</code> has restart area which is <code>0x0000 ~ 0x2000</code> in size.</p>
+</li>
+</ul>
+<h3 id="logfile">LogFile<a hidden class="anchor" aria-hidden="true" href="#logfile">#</a></h3>
+<ul>
+<li>
+<p>A logfile is a metadata file that stores transactional data to facilitate the recovery of the file system to a consistent state in the event of system crashes and unexpected conditions</p>
+</li>
+<li>
+<p>It helps prevent data loss by ensuring that changes to the file system are recorded in a systematic manner, allowing for proper restoration if needed.</p>
+</li>
+<li>
+<p>It contains changes in metadata of files and directories like <code>CREATE</code>, <code>MOVE</code>, <code>RENAME</code> and <code>DELETE</code>.</p>
+</li>
+</ul>
+<h3 id="refs-logfile-vs-ntfs-logfile">ReFS LogFile vs NTFS $LogFile<a hidden class="anchor" aria-hidden="true" href="#refs-logfile-vs-ntfs-logfile">#</a></h3>
+<p><img loading="lazy" src="image-2.png" alt="alt text"  />
+
+<code>Fig : Redo Structure of ReFS</code></p>
+<p><img loading="lazy" src="image-4.png" alt="alt text"  />
+</p>
+<p><code>Fig : Structure of Operation Record</code></p>
+<ul>
+<li>Read More about <a href="https://eudl.eu/pdf/10.1007/978-3-642-35515-8_18"><code>NTFS-$LogFile</code></a></li>
+</ul>
+<p>Now, let&rsquo;s dive into the structure of the ReFS <code>LogFile</code></p>
+<h2 id="logfile-structure">LogFile-Structure<a hidden class="anchor" aria-hidden="true" href="#logfile-structure">#</a></h2>
+<p><img loading="lazy" src="images/image-201.png" alt="AltText"  />
+</p>
+<h3 id="logfile-entry-structure">LogFile Entry Structure<a hidden class="anchor" aria-hidden="true" href="#logfile-entry-structure">#</a></h3>
+<p><img loading="lazy" src="images/image-202.png" alt="AltText"  />
+</p>
+<h2 id="explanation">Explanation<a hidden class="anchor" aria-hidden="true" href="#explanation">#</a></h2>
+<p><img loading="lazy" src="images/image-204.png" alt="AltText"  />
+</p>
+<blockquote>
+<p>Red Bounded Area -&gt; <code>ReFS Entry Header</code></p>
+</blockquote>
+<blockquote>
+<p>Green Bounded Area -&gt; <code>Log Entry Header </code></p>
+</blockquote>
+<p><img loading="lazy" src="images/image-205.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-207.png" alt="AltText"  />
+</p>
+<h3 id="redo-log-header">Redo Log Header<a hidden class="anchor" aria-hidden="true" href="#redo-log-header">#</a></h3>
+<p><img loading="lazy" src="images/image-208.png" alt="AltText"  />
+</p>
+<p><code>Redo Log Header Size : 0x38 bytes</code></p>
+<h3 id="redo-data-offset-array">Redo Data Offset Array<a hidden class="anchor" aria-hidden="true" href="#redo-data-offset-array">#</a></h3>
+<p><img loading="lazy" src="images/image-209.png" alt="AltText"  />
+</p>
+<p><code>Tail Offset</code> : <em>indicates ending of data offset array</em></p>
+<p><code>Tail Size</code>: <em>size of each transaction</em></p>
+<h3 id="redo-transactional-data">Redo Transactional Data<a hidden class="anchor" aria-hidden="true" href="#redo-transactional-data">#</a></h3>
+<h3 id="example-1">Example 1<a hidden class="anchor" aria-hidden="true" href="#example-1">#</a></h3>
+<p><img loading="lazy" src="images/image-210.png" alt="AltText"  />
+</p>
+<h3 id="example-2">Example 2<a hidden class="anchor" aria-hidden="true" href="#example-2">#</a></h3>
+<p><img loading="lazy" src="images/image-211.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-212.png" alt="AltText"  />
+
+<em>Source: ARIN</em></p>
+<h3 id="example-3">Example 3<a hidden class="anchor" aria-hidden="true" href="#example-3">#</a></h3>
+<p><img loading="lazy" src="image-3.png" alt="alt text"  />
+</p>
+<h2 id="extracting-log-files-from-the-file-system">Extracting Log Files from the File System<a hidden class="anchor" aria-hidden="true" href="#extracting-log-files-from-the-file-system">#</a></h2>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">dd <span class="k">if</span><span class="o">=</span>ReAL_File_System.001 <span class="nv">skip</span><span class="o">=</span><span class="k">$((</span><span class="m">0</span>x20001000<span class="k">))</span> <span class="nv">count</span><span class="o">=</span><span class="k">$((</span><span class="m">0</span>x200A7000 <span class="o">-</span><span class="m">0</span>x20001000<span class="k">))</span> <span class="nv">of</span><span class="o">=</span>logs.txt <span class="nv">bs</span><span class="o">=</span><span class="m">1</span>
+</span></span></code></pre></div><h2 id="solution">Solution<a hidden class="anchor" aria-hidden="true" href="#solution">#</a></h2>
+<h3 id="question-1-1">Question-1<a hidden class="anchor" aria-hidden="true" href="#question-1-1">#</a></h3>
+<ol>
+<li>
+<p>List all directories that have been renamed, including their original names and the timestamps of when they were renamed.</p>
+<p><strong>Format :[ [&lsquo;OriginalDirName&rsquo;, &lsquo;RenamedDirName&rsquo;, TimeStamp] , .. ]</strong></p>
+</li>
+</ol>
+<p>To identify renamed directories, search for the opcodes associated with directory renaming. Following these opcodes&rsquo; consecutive MLog entries will unveil the timestamps indicating when the renaming occurred.</p>
+<ul>
+<li>
+<p>Search for the hexadecimal values <code>30 00 02 00</code> in the LogFile, these values serve as prefixes for directories, while <code>30 00 01 00</code> is indicative of files. Be aware that there might be some false positives in the results.</p>
+</li>
+<li>
+<p>File Prefix (from ReFS Detector) : <code>30 01 00 00 80 01 00 00 00 00 00 00 30 00 01 00</code></p>
+</li>
+</ul>
+<pre tabindex="0"><code>
+0x2 -&gt; 0x2 -&gt; 0x1 -&gt; 0x1 -&gt; 0x4
+</code></pre><p><img loading="lazy" src="images/image-38.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-39.png" alt="AltText"  />
+</p>
+<p>Timestamp will be found in next <code>MLog</code> (starting with opcode <code>0x4</code>).</p>
+<p><img loading="lazy" src="images/image-55.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-40.png" alt="AltText"  />
+</p>
+<p><code>['e88e52cac', '88077a4a1370', '2024-02-18 13:10:20.49']</code></p>
+<p>Similarly, We can write a script to make our task easy.</p>
+<p><code>['fb828d071', 'cad090f9724d', '2024-02-18 13:12:12.48']</code></p>
+<p><strong>Final Ans</strong></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl">    <span class="p">[</span>
+</span></span><span class="line"><span class="cl">        <span class="p">[</span><span class="s1">&#39;e88e52cac&#39;</span><span class="p">,</span> <span class="s1">&#39;88077a4a1370&#39;</span><span class="p">,</span> <span class="s1">&#39;2024-02-18 13:10:20.49&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">        <span class="p">[</span><span class="s1">&#39;fb828d071&#39;</span><span class="p">,</span><span class="s1">&#39;cad090f9724d&#39;</span><span class="p">,</span> <span class="s1">&#39;2024-02-18 13:12:12.48&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="p">]</span>
+</span></span></code></pre></div><ol start="2">
+<li>
+<p>Name all the deleted directories with deletion timestamps.</p>
+<p><strong>Format : [ [&lsquo;DirectoryName&rsquo; , &lsquo;TimeStamp&rsquo;] , .. ]</strong></p>
+</li>
+</ol>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">0x2 -&gt; 0xf -&gt; 0x2 -&gt; 0xf -&gt; 0x4 -&gt; 0x12
+</span></span></code></pre></div><p><img loading="lazy" src="images/image-44.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-41.png" alt="AltText"  />
+</p>
+<p>Remaining opcodes can be found in <code>MLog</code>.</p>
+<p><img loading="lazy" src="images/image-42.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-43.png" alt="AltText"  />
+</p>
+<p><strong>Permanently Deleted Directories</strong></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="p">[</span>
+</span></span><span class="line"><span class="cl">     <span class="p">[</span><span class="s1">&#39;f8f1c218f9&#39;</span><span class="p">,</span> <span class="s1">&#39;2024-02-18 13:11:28.57&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">     <span class="p">[</span><span class="s1">&#39;de34f60ab&#39;</span><span class="p">,</span>  <span class="s1">&#39;2024-02-18 13:13:19.60&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="p">]</span>
+</span></span></code></pre></div><details>
+    <summary> Simple Directory Deletion Opcode</summary>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">P<span class="o">(</span>Directory Creation<span class="o">)</span> → 0x06 → 0x04 → 0x04 → 0x04 → 0x04 → 0x03 → 0x02 → 0x02 → 0x01 → 0x01 → 0x0e → 0x04 → 0x03 → 0x04 → 0x04 → 0x04 → 0x01 → 0x04 → 0x03 → 0x04 → 0x04 → 0x08
+</span></span></code></pre></div></details>
+<p><img loading="lazy" src="images/image-213.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-45.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-50.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-52.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-48.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-46.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-47.png" alt="AltText"  />
+</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"> <span class="p">[</span><span class="s1">&#39;c062fb828&#39;</span><span class="p">,</span> <span class="s1">&#39;2024-02-18 13:10:48.62&#39;</span><span class="p">]</span>
+</span></span></code></pre></div><p>OR,</p>
+<p>Simple Deletion Timestamp can be found through analyzing <code>$IXXXXX</code></p>
+<p><img loading="lazy" src="images/image-214.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-215.png" alt="AltText"  />
+</p>
+<p><strong>Final Ans</strong></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="p">[</span>
+</span></span><span class="line"><span class="cl">     <span class="p">[</span><span class="s1">&#39;f8f1c218f9&#39;</span><span class="p">,</span> <span class="s1">&#39;2024-02-18 13:11:28.57&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">     <span class="p">[</span><span class="s1">&#39;de34f60ab&#39;</span><span class="p">,</span>  <span class="s1">&#39;2024-02-18 13:13:19.60&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">     <span class="p">[</span><span class="s1">&#39;c062fb828&#39;</span><span class="p">,</span>  <span class="s1">&#39;2024-02-18 13:10:48.62&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="p">]</span>
+</span></span></code></pre></div><h3 id="question--3">Question -3<a hidden class="anchor" aria-hidden="true" href="#question--3">#</a></h3>
+<hr>
+<ol start="3">
+<li>
+<p>List all directories with their creation times, including renamed and deleted.</p>
+<p><strong>Note : If a directory was renamed, include its original name and creation time.</strong></p>
+<p><strong>Fomat : [ [&lsquo;DirectoryName&rsquo; , &lsquo;CreatedTime&rsquo;] , &hellip;. ]</strong></p>
+</li>
+</ol>
+<details>
+    <summary> Dir Creation</summary>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">0x00 → 0x00 → 0x04 → 0x10 → 0x01 → 0x01 → 0x01 → 0x0e → 0x03 → 0x04
+</span></span></code></pre></div></details>
+<p><img loading="lazy" src="images/image-53.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-54.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-56.png" alt="AltText"  />
+</p>
+<p><strong><em>Final Ans</em></strong></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl">    <span class="p">[</span>
+</span></span><span class="line"><span class="cl">        <span class="p">[</span><span class="s1">&#39;de34f60ab&#39;</span><span class="p">,</span> <span class="s1">&#39;2024-02-18 13:06:59.22&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">        <span class="p">[</span><span class="s1">&#39;e88e52cac&#39;</span><span class="p">,</span> <span class="s1">&#39;2024-02-18 13:07:31.13&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">        <span class="p">[</span><span class="s1">&#39;fb828d071&#39;</span><span class="p">,</span> <span class="s1">&#39;2024-02-18 13:08:13.88&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">        <span class="p">[</span><span class="s1">&#39;f8f1c218f9&#39;</span><span class="p">,</span><span class="s1">&#39;2024-02-18 13:08:40.58&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">        <span class="p">[</span><span class="s1">&#39;c062fb828&#39;</span><span class="p">,</span> <span class="s1">&#39;2024-02-18 13:09:14.55&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">        <span class="p">[</span><span class="s1">&#39;bb6de6190&#39;</span><span class="p">,</span> <span class="s1">&#39;2024-02-18 13:09:34.00&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="p">]</span>
+</span></span></code></pre></div><h3 id="question---4">Question - 4<a hidden class="anchor" aria-hidden="true" href="#question---4">#</a></h3>
+<hr>
+<ol start="4">
+<li>
+<p>Recover the files that have been deleted, and provide the <strong>md5sum</strong> of each recovered file.</p>
+<p><strong>Format : [ [&lsquo;file1hash&rsquo;]&rsquo; , [&lsquo;file2hash2&rsquo;], &hellip; ]</strong></p>
+</li>
+</ol>
+<p>Load the disk image in <code>Active Disk Editor</code></p>
+<p><img loading="lazy" src="images/image-57.png" alt="AltText"  />
+</p>
+<ul>
+<li>
+<p><code>$IXXXXX</code> file has components like filename, fullpath , deletion time etc.</p>
+</li>
+<li>
+<p><code>$RXXXXX</code> file contents can be recovered.</p>
+</li>
+<li>
+<p>3 files are simply deleted.</p>
+</li>
+</ul>
+<p><img loading="lazy" src="images/image-59.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-60.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-58.png" alt="AltText"  />
+</p>
+<ul>
+<li>
+<p>The <code>dd</code> command can be utilized to extract a file from an image file, with the option to enhance extraction speed by increasing the <code>block-size</code>.</p>
+</li>
+<li>
+<p>Divide the skip and count by block-size.</p>
+</li>
+<li>
+<p>Copying and pasting content from <code>Active Disk Editor</code> works for smaller files. However, for larger files, this method won&rsquo;t work :).</p>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">dd <span class="k">if</span><span class="o">=</span>ReAL_File_System.001 <span class="nv">skip</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">0</span>x1000 <span class="o">*</span> <span class="m">71168</span><span class="o">)/</span><span class="m">1</span><span class="k">))</span> <span class="nv">count</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">0</span>x15a<span class="o">)/</span><span class="m">1</span><span class="k">))</span>  <span class="nv">bs</span><span class="o">=</span><span class="m">1</span> <span class="nv">of</span><span class="o">=</span>simple-pass.txt
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">dd <span class="k">if</span><span class="o">=</span>ReAL_File_System.001 <span class="nv">skip</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">0</span>x1000 <span class="o">*</span> <span class="m">68608</span><span class="o">)/</span><span class="m">16</span><span class="k">))</span> <span class="nv">count</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">0</span>x04e20<span class="o">)/</span><span class="m">16</span><span class="k">))</span>  <span class="nv">bs</span><span class="o">=</span><span class="m">16</span> <span class="nv">of</span><span class="o">=</span>19ff211f
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">dd <span class="k">if</span><span class="o">=</span>ReAL_File_System.001 <span class="nv">skip</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">0</span>x1000 <span class="o">*</span> <span class="m">70144</span><span class="k">))</span><span class="o">)</span> <span class="nv">count</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">0</span>x041b7<span class="k">))</span><span class="o">)</span>  <span class="nv">bs</span><span class="o">=</span><span class="m">1</span> <span class="nv">of</span><span class="o">=</span>fe0c329
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="n">f91488b7e00c31793bd7aa98c51896d0</span>  <span class="n">simple</span><span class="o">-</span><span class="k">pass</span><span class="o">.</span><span class="n">txt</span>
+</span></span><span class="line"><span class="cl"><span class="mi">4</span><span class="n">c009b045056af8f9bb401c69408d2cf</span>  <span class="mi">19</span><span class="n">ff211f</span>
+</span></span><span class="line"><span class="cl"><span class="n">c50c5bcb9e98537e3d63df1bc68a81d0</span>  <span class="n">fe0c329</span>
+</span></span></code></pre></div><p><strong><em>Final Ans</em></strong></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl">    <span class="p">[</span>
+</span></span><span class="line"><span class="cl">        <span class="p">[</span><span class="s1">&#39;f91488b7e00c31793bd7aa98c51896d0&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">        <span class="p">[</span><span class="s1">&#39;4c009b045056af8f9bb401c69408d2cf&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">        <span class="p">[</span><span class="s1">&#39;c50c5bcb9e98537e3d63df1bc68a81d0&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="p">]</span>
+</span></span></code></pre></div><h3 id="question---5">Question - 5<a hidden class="anchor" aria-hidden="true" href="#question---5">#</a></h3>
+<hr>
+<ol start="5">
+<li>
+<p>Identify all files that have been deleted (Simple + Permanent), including their deletion timestamps.</p>
+<p><strong>Format :[ [ &lsquo;filename&rsquo; , &lsquo;TimeStamp&rsquo; , &lsquo;Simple/Permanent&rsquo; ] , .. ]</strong></p>
+</li>
+</ol>
+<p><strong><em>Simple Deletion</em></strong></p>
+<p><img loading="lazy" src="images/image-63.png" alt="AltText"  />
+</p>
+<p><strong><em>Permanent Deletion</em></strong></p>
+<p><img loading="lazy" src="images/image-62.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-61.png" alt="AltText"  />
+</p>
+<ul>
+<li>
+<h4 id="simple-passtxt">simple-pass.txt<a hidden class="anchor" aria-hidden="true" href="#simple-passtxt">#</a></h4>
+</li>
+</ul>
+<p><img loading="lazy" src="images/image-64.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-66.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-67.png" alt="AltText"  />
+</p>
+<p>TimeStamp</p>
+<p><img loading="lazy" src="images/image-68.png" alt="AltText"  />
+</p>
+<p><code>2024-02-18 13:15:00.51</code></p>
+<p>In the same manner, examine the log file for each alternate file.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="p">[</span><span class="s1">&#39;simple-pass.txt&#39;</span><span class="p">,</span><span class="s1">&#39;2024-02-18 13:15:00.51&#39;</span><span class="p">,</span><span class="s1">&#39;Simple&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="s1">&#39;19ff211f&#39;</span><span class="p">,</span><span class="s1">&#39;2024-02-18 13:14:31.43&#39;</span><span class="p">,</span><span class="s1">&#39;Simple&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="s1">&#39;fe0c329&#39;</span><span class="p">,</span><span class="s1">&#39;2024-02-18 13:15:52.49&#39;</span><span class="p">,</span><span class="s1">&#39;Simple&#39;</span><span class="p">]</span>
+</span></span></code></pre></div><h4 id="for-permanent-files">For Permanent Files<a hidden class="anchor" aria-hidden="true" href="#for-permanent-files">#</a></h4>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">0x0f -&gt; 0x02 -&gt; 0x0f -&gt; 0x02 -&gt; 0x04
+</span></span></code></pre></div><p><img loading="lazy" src="images/image-69.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-70.png" alt="AltText"  />
+</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="o">(</span><span class="s1">&#39;ead47cb&#39;</span>,<span class="s1">&#39;2024-02-18 13:19:26.69&#39;</span>,<span class="s1">&#39;Permanent&#39;</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl"><span class="o">(</span><span class="s1">&#39;essay.txt&#39;</span>,<span class="s1">&#39;2024-02-18 13:18:22.47&#39;</span>,<span class="s1">&#39;Permanent&#39;</span><span class="o">)</span>
+</span></span></code></pre></div><p><strong><em>Final Ans</em></strong></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl">    <span class="p">[</span>
+</span></span><span class="line"><span class="cl">        <span class="p">[</span><span class="s1">&#39;simple-pass.txt&#39;</span><span class="p">,</span><span class="s1">&#39;2024-02-18 13:15:00.51&#39;</span><span class="p">,</span><span class="s1">&#39;Simple&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">        <span class="p">[</span><span class="s1">&#39;19ff211f&#39;</span><span class="p">,</span><span class="s1">&#39;2024-02-18 13:14:31.43&#39;</span><span class="p">,</span><span class="s1">&#39;Simple&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">        <span class="p">[</span><span class="s1">&#39;fe0c329&#39;</span><span class="p">,</span><span class="s1">&#39;2024-02-18 13:15:52.49&#39;</span><span class="p">,</span><span class="s1">&#39;Simple&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">        <span class="p">[</span><span class="s1">&#39;ead47cb&#39;</span><span class="p">,</span><span class="s1">&#39;2024-02-18 13:19:26.69&#39;</span><span class="p">,</span><span class="s1">&#39;Permanent&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">        <span class="p">[</span><span class="s1">&#39;essay.txt&#39;</span><span class="p">,</span><span class="s1">&#39;2024-02-18 13:18:22.47&#39;</span><span class="p">,</span><span class="s1">&#39;Permanent&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="p">]</span>
+</span></span></code></pre></div><h2 id="question-6-1">Question-6<a hidden class="anchor" aria-hidden="true" href="#question-6-1">#</a></h2>
+<ol start="6">
+<li>
+<p>Restore all encrypted files, decrypt them, and provide the <strong>md5sum</strong> of each decrypted file after removing any extra bytes before computing the hash.</p>
+<p><strong>Format :[[&lsquo;hash1&rsquo;], [&lsquo;hash2&rsquo;],..]</strong></p>
+</li>
+</ol>
+<h5 id="an-overview-on-time_updateexe">An Overview on time_update.exe<a hidden class="anchor" aria-hidden="true" href="#an-overview-on-time_updateexe">#</a></h5>
+<hr>
+<ol>
+<li>Enumerate each directory and rename all files.</li>
+<li>Generate a random time and convert it to <code>SystemToFileTime</code>. Generate <code>key1</code> and append a 4-byte nonce.</li>
+<li>Compute the MD5 hash of <code>key1</code> and set it as <code>key2</code>.</li>
+<li>Rename each file with a random time and encrypt it.
+<ul>
+<li>Encryption process: <code>enc[i] = file[i] ^ key1[i] ^ key2[i]</code>.</li>
+</ul>
+</li>
+<li>Enumerate all files again and update their names with the <code>.tort</code> extension.</li>
+<li>Before exiting, restore the system time to its initial state.</li>
+</ol>
+<p>Because it updates the time before encrypting the files, it leaves a trace in the log files that could potentially be used to recover key.</p>
+<h5 id="file-decryption">File-Decryption<a hidden class="anchor" aria-hidden="true" href="#file-decryption">#</a></h5>
+<ul>
+<li>
+<p>The <code>time_update.exe</code> uses two keys <code>key1</code> and hash of <code>key1</code> as key2 to encrypt the files.</p>
+</li>
+<li>
+<p>To find <code>key1</code>, we need to locate the second rename timestamp. However, <code>key1</code> includes an additional 4-byte nonce, which is unknown, necessitating brute force to obtain the correct <code>key1</code>.</p>
+</li>
+<li>
+<p>By cross-referencing the encrypted files in the logfile, we can identify the original filenames and then brute force the files using their headers to determine the nonce.</p>
+</li>
+<li>
+<p>Some files only have small byte file signatures, resulting in numerous possible nonces. We can validate these nonces by examining the end-of-file signatures and chunks present in the file.</p>
+</li>
+</ul>
+<p><img loading="lazy" src="images/image-216.png" alt="AltText"  />
+
+<img loading="lazy" src="images/image-217.png" alt="AltText"  />
+
+<img loading="lazy" src="images/image-218.png" alt="AltText"  />
+
+<img loading="lazy" src="images/image-219.png" alt="AltText"  />
+
+<img loading="lazy" src="images/image-220.png" alt="AltText"  />
+
+<img loading="lazy" src="images/image-221.png" alt="AltText"  />
+
+<img loading="lazy" src="images/image-222.png" alt="AltText"  />
+
+<img loading="lazy" src="images/image-223.png" alt="AltText"  />
+</p>
+<blockquote>
+<p>Opcode for Renamed File : <strong><code>0x02 → 0x05 → 0x01 → 0x04 → 0x04</code></strong></p>
+</blockquote>
+<ul>
+<li>
+<p>Let&rsquo;s manually search for the required information. We&rsquo;ll begin by assigning filenames with the extension <code>tort</code> and then conduct a search within the log file.</p>
+</li>
+<li>
+<p>Specifically, we&rsquo;ll focus on identifying the first operation code (opcode) located at offset <code>0xb0</code>.</p>
+</li>
+<li>
+<p>After locating it, we&rsquo;ll parse the data and examine the previous MLog to find the corresponding filenames.</p>
+</li>
+</ul>
+<p><img loading="lazy" src="images/image-1.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-2.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-3.png" alt="AltText"  />
+</p>
+<p>First Rename : <em><code>15005-39026.pdf -&gt; bf2f63b3</code></em></p>
+<p>Search for the <em><code>bf2f63b3</code></em></p>
+<p><img loading="lazy" src="images/image-5.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-6.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-7.png" alt="AltText"  />
+</p>
+<p>Second Rename : <em><code>bf2f6b3 -&gt; 0cf51fbc</code></em></p>
+<blockquote>
+<p>The system time is expressed in Coordinated Universal Time (UTC).</p>
+</blockquote>
+<p>Rename Time(Encryption Key) : <em><code>2010-02-26 12:38:43.0000000 </code></em></p>
+<pre tabindex="0"><code>Enc Key : 2010 2 2 26 12 38 43 0
+</code></pre><p><img loading="lazy" src="images/image-8.png" alt="AltText"  />
+</p>
+<p>Third Rename : <em><code>0cf51fbc -&gt; 0cf51fbc.tort</code></em></p>
+<blockquote>
+<p>Likewise, find the timestamp used for encryption on all remaining files, and proceed to extract those files accordingly.</p>
+</blockquote>
+<p><code>binary-01.gif -&gt; c7982ef6 -&gt; a917438f -&gt; a917438f.tort</code> : <strong>1995 2 2 27 2 11 42 0</strong></p>
+<p><code>Everest Vista.webp -&gt; d406327c -&gt; 3a7fab71 -&gt; 3a7fab71.tort </code> : <strong>1990 8 2 28 21 6 35 0</strong></p>
+<p><code>Paranormal Phenomenon.docx -&gt; 830c92a3 -&gt; bb292337 -&gt; bb292337.tort</code> : <strong>1993 7 2 16 17 10 46 0</strong></p>
+<p><code>so-cappy.jpg -&gt; 141e0f79 -&gt; 24819686 -&gt; 24819686.tort </code> : <strong>2001 4 2 19 8 27 45 0</strong></p>
+<p><code>stuffs.rar -&gt; f15ebcd2 -&gt; 7a6c7166 -&gt; 7a6c7166.tort</code> : <strong>2009 11 2 22 17 5 55 0</strong></p>
+<p><code>ySq12b0T.mp4 -&gt; 86c66c9c -&gt; 185c65f8 -&gt; 185c65f8.tort</code> : <strong>2007 7 2 28 3 27 33 0</strong></p>
+<p><code> vl36hkjkzbh91.png -&gt; 313feb6e -&gt; cc876a3b -&gt; cc876a3b.tort</code> : <strong>1985 3 2 4 16 23 53 0</strong></p>
+<hr>
+<p><img loading="lazy" src="images/image-224.png" alt="AltText"  />
+</p>
+<h4 id="carving-out-files">Carving Out Files<a hidden class="anchor" aria-hidden="true" href="#carving-out-files">#</a></h4>
+<h6 id="0cf51fbctort">0cf51fbc.tort<a hidden class="anchor" aria-hidden="true" href="#0cf51fbctort">#</a></h6>
+<p>Let&rsquo;s take a look at it using Active Disk Editor.</p>
+<p><img loading="lazy" src="images/image-20.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-21.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-22.png" alt="AltText"  />
+</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">dd <span class="k">if</span><span class="o">=</span>ReAL_File_System.001 <span class="nv">skip</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">0</span>x10e94000<span class="o">)/</span><span class="m">4096</span><span class="k">))</span> <span class="nv">count</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">0</span>x16c000<span class="o">)/</span><span class="m">4096</span><span class="k">))</span>  <span class="nv">bs</span><span class="o">=</span><span class="m">4096</span> <span class="nv">of</span><span class="o">=</span>0cf51fbc_1.tort
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">dd <span class="k">if</span><span class="o">=</span>ReAL_File_System.001 <span class="nv">skip</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">0</span>x11001000<span class="o">)/</span><span class="m">4096</span><span class="k">))</span> <span class="nv">count</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">0</span>x141000<span class="o">)/</span><span class="m">4096</span><span class="k">))</span>  <span class="nv">bs</span><span class="o">=</span><span class="m">4096</span> <span class="nv">of</span><span class="o">=</span>0cf51fbc_2.tort
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">cat 0cf51fbc_1.tort 0cf51fbc_2.tort &gt; 0cf51fbc.tort
+</span></span></code></pre></div><h6 id="a917438ftort">a917438f.tort<a hidden class="anchor" aria-hidden="true" href="#a917438ftort">#</a></h6>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">dd <span class="k">if</span><span class="o">=</span>ReAL_File_System.001 <span class="nv">skip</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">0</span>x10025000<span class="o">)/</span><span class="m">64</span><span class="k">))</span> <span class="nv">count</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">0</span>x89ce40<span class="o">)/</span><span class="m">64</span><span class="k">))</span>  <span class="nv">bs</span><span class="o">=</span><span class="m">64</span> <span class="nv">of</span><span class="o">=</span>a917438f.tort
+</span></span></code></pre></div><p>After extracting the encrypted files, remove any additional bytes.</p>
+<p><img loading="lazy" src="images/image-28.png" alt="AltText"  />
+</p>
+<hr>
+<h6 id="7a6c7166tort">7a6c7166.tort<a hidden class="anchor" aria-hidden="true" href="#7a6c7166tort">#</a></h6>
+<p><img loading="lazy" src="images/image-30.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-29.png" alt="AltText"  />
+</p>
+<p><img loading="lazy" src="images/image-32.png" alt="AltText"  />
+</p>
+<p>Go to offset <code>0x108c2000</code>, <code>0x10c05000</code> &amp; read <code>830 * 0x1000</code> ,<code>130 * 0x1000</code>bytes respectively</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"> dd <span class="k">if</span><span class="o">=</span>ReAL_File_System.001 <span class="nv">skip</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">0</span>x108c2000<span class="o">)/</span><span class="m">8192</span><span class="k">))</span> <span class="nv">count</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">830</span> <span class="o">*</span> <span class="m">0</span>x1000<span class="o">)/</span><span class="m">8192</span><span class="k">))</span>  <span class="nv">bs</span><span class="o">=</span><span class="m">8192</span> <span class="nv">of</span><span class="o">=</span>7a6c7166_1.tort
+</span></span><span class="line"><span class="cl"> dd <span class="k">if</span><span class="o">=</span>ReAL_File_System.001 <span class="nv">skip</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">0</span>x10c05000<span class="o">)/</span><span class="m">4096</span><span class="k">))</span> <span class="nv">count</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">130</span> <span class="o">*</span> <span class="m">0</span>x1000<span class="o">)/</span><span class="m">4096</span><span class="k">))</span>  <span class="nv">bs</span><span class="o">=</span><span class="m">4096</span> <span class="nv">of</span><span class="o">=</span>7a6c7166_2.tort
+</span></span><span class="line"><span class="cl">cat 7a6c7166_1.tort 7a6c7166_2.tort &gt; 7a6c7166.tort
+</span></span></code></pre></div><hr>
+<h6 id="185c65f8tort">185c65f8.tort<a hidden class="anchor" aria-hidden="true" href="#185c65f8tort">#</a></h6>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">dd <span class="k">if</span><span class="o">=</span>ReAL_File_System.001 <span class="nv">skip</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">68743</span> <span class="o">*</span> <span class="m">0</span>x1000<span class="o">)/</span><span class="m">4096</span><span class="k">))</span> <span class="nv">count</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">525</span> <span class="o">*</span> <span class="m">0</span>x1000<span class="o">)/</span><span class="m">4096</span><span class="k">))</span>  <span class="nv">bs</span><span class="o">=</span><span class="m">4096</span> <span class="nv">of</span><span class="o">=</span>185c65f8.tort
+</span></span></code></pre></div><hr>
+<h6 id="24819686tort">24819686.tort<a hidden class="anchor" aria-hidden="true" href="#24819686tort">#</a></h6>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">dd <span class="k">if</span><span class="o">=</span>ReAL_File_System.001 <span class="nv">skip</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">0</span>x12800000<span class="o">)/</span><span class="m">4096</span><span class="k">))</span> <span class="nv">count</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">0</span>x10000<span class="o">)/</span><span class="m">4096</span><span class="k">))</span>  <span class="nv">bs</span><span class="o">=</span><span class="m">4096</span> <span class="nv">of</span><span class="o">=</span>24819686.tort
+</span></span></code></pre></div><hr>
+<h6 id="3a7fab71tort">3a7fab71.tort<a hidden class="anchor" aria-hidden="true" href="#3a7fab71tort">#</a></h6>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">dd <span class="k">if</span><span class="o">=</span>ReAL_File_System.001 <span class="nv">skip</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">0</span>x10000000<span class="o">)/</span><span class="m">4096</span><span class="k">))</span> <span class="nv">count</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">0</span>x25000<span class="o">)/</span><span class="m">4096</span><span class="k">))</span>  <span class="nv">bs</span><span class="o">=</span><span class="m">4096</span> <span class="nv">of</span><span class="o">=</span>3a7fab71.tort
+</span></span></code></pre></div><hr>
+<h6 id="bb292337tort">bb292337.tort<a hidden class="anchor" aria-hidden="true" href="#bb292337tort">#</a></h6>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">dd <span class="k">if</span><span class="o">=</span>ReAL_File_System.001 <span class="nv">skip</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">0</span>x13a00000<span class="o">)/</span><span class="m">4096</span><span class="k">))</span> <span class="nv">count</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">0</span>x8000<span class="o">)/</span><span class="m">4096</span><span class="k">))</span>  <span class="nv">bs</span><span class="o">=</span><span class="m">4096</span> <span class="nv">of</span><span class="o">=</span>bb292337.tort
+</span></span></code></pre></div><hr>
+<h6 id="cc876a3btort">cc876a3b.tort<a hidden class="anchor" aria-hidden="true" href="#cc876a3btort">#</a></h6>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">dd <span class="k">if</span><span class="o">=</span>ReAL_File_System.001 <span class="nv">skip</span><span class="o">=</span><span class="k">$((</span><span class="o">(</span><span class="m">0</span>x1000 <span class="o">*</span> <span class="m">72705</span><span class="k">))</span><span class="o">)</span> <span class="nv">count</span><span class="o">=</span><span class="k">$((</span><span class="m">0</span>x175f<span class="k">))</span>  <span class="nv">bs</span><span class="o">=</span><span class="m">1</span> <span class="nv">of</span><span class="o">=</span>cc876a3b.tort
+</span></span></code></pre></div><h6 id="remove-extra-bytes-from-the-files">Remove extra bytes from the files.<a hidden class="anchor" aria-hidden="true" href="#remove-extra-bytes-from-the-files">#</a></h6>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">struct</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">file_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;0cf51fbc.tort&#39;</span><span class="p">,</span><span class="s1">&#39;a917438f.tort&#39;</span><span class="p">,</span><span class="s1">&#39;7a6c7166.tort&#39;</span><span class="p">,</span><span class="s1">&#39;185c65f8.tort&#39;</span><span class="p">,</span><span class="s1">&#39;24819686.tort&#39;</span><span class="p">,</span><span class="s1">&#39;3a7fab71.tort&#39;</span><span class="p">,</span><span class="s1">&#39;bb292337.tort&#39;</span><span class="p">,</span><span class="s1">&#39;cc876a3b.tort&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">file_names</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">buff</span> <span class="o">=</span> <span class="nb">bytes</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sig</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mh">0x04</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sz</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&#34;&lt;I&#34;</span><span class="p">,</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mh">0x04</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">buff</span> <span class="o">+=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">sz</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;</span><span class="si">{</span><span class="n">_</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">sig</span> <span class="o">+</span> <span class="n">sz</span><span class="o">.</span><span class="n">to_bytes</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="s1">&#39;little&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">buff</span><span class="p">)</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">typedef</span> <span class="k">struct</span> <span class="nc">_SYSTEMTIME</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">WORD</span> <span class="n">wYear</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">WORD</span> <span class="n">wMonth</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">WORD</span> <span class="n">wDayOfWeek</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">WORD</span> <span class="n">wDay</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">WORD</span> <span class="n">wHour</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">WORD</span> <span class="n">wMinute</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">WORD</span> <span class="n">wSecond</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">WORD</span> <span class="n">wMilliseconds</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="n">SYSTEMTIME</span><span class="p">,</span> <span class="o">*</span><span class="n">PSYSTEMTIME</span><span class="p">,</span> <span class="o">*</span><span class="n">LPSYSTEMTIME</span><span class="p">;</span>
+</span></span></code></pre></div><p>Read about <a href="https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-systemtime">SystemTime</a></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">BOOL</span> <span class="nf">SystemTimeToFileTime</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">  <span class="p">[</span><span class="n">in</span><span class="p">]</span>  <span class="k">const</span> <span class="n">SYSTEMTIME</span> <span class="o">*</span><span class="n">lpSystemTime</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="p">[</span><span class="n">out</span><span class="p">]</span> <span class="n">LPFILETIME</span>       <span class="n">lpFileTime</span>
+</span></span><span class="line"><span class="cl"><span class="p">);</span>
+</span></span></code></pre></div><p>Read about <a href="https://learn.microsoft.com/en-us/windows/win32/api/timezoneapi/nf-timezoneapi-systemtimetofiletime">SystemTimetoFileSystemTime</a></p>
+<h4 id="file_decryption_part">File_Decryption_Part<a hidden class="anchor" aria-hidden="true" href="#file_decryption_part">#</a></h4>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdint.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;string&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;Windows.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cp">#define ROTATE_LEFT(x, n) (((x) &lt;&lt; (n)) | ((x) &gt;&gt; (32-(n))))
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span> <span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[]){</span>
+</span></span><span class="line"><span class="cl">    <span class="n">SYSTEMTIME</span> <span class="n">st</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">FILETIME</span> <span class="n">ft</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">st</span><span class="p">.</span><span class="n">wYear</span> <span class="o">=</span>  <span class="p">(</span><span class="kt">int16_t</span><span class="p">)</span> <span class="n">stoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">st</span><span class="p">.</span><span class="n">wMonth</span> <span class="o">=</span>  <span class="p">(</span><span class="kt">int16_t</span><span class="p">)</span> <span class="n">stoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">st</span><span class="p">.</span><span class="n">wDayOfWeek</span> <span class="o">=</span> <span class="p">(</span><span class="kt">int16_t</span><span class="p">)</span><span class="n">stoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">3</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">st</span><span class="p">.</span><span class="n">wDay</span> <span class="o">=</span>  <span class="p">(</span><span class="kt">int16_t</span><span class="p">)</span> <span class="n">stoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">4</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">st</span><span class="p">.</span><span class="n">wHour</span> <span class="o">=</span>  <span class="p">(</span><span class="kt">int16_t</span><span class="p">)</span> <span class="n">stoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">5</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">st</span><span class="p">.</span><span class="n">wMinute</span> <span class="o">=</span> <span class="p">(</span><span class="kt">int16_t</span><span class="p">)</span> <span class="n">stoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">6</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">st</span><span class="p">.</span><span class="n">wSecond</span> <span class="o">=</span>  <span class="p">(</span><span class="kt">int16_t</span><span class="p">)</span> <span class="n">stoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">7</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">st</span><span class="p">.</span><span class="n">wMilliseconds</span> <span class="o">=</span>  <span class="p">(</span><span class="kt">int16_t</span><span class="p">)</span> <span class="n">stoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">8</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">SystemTimeToFileTime</span><span class="p">(</span><span class="o">&amp;</span><span class="n">st</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ft</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">ft</span><span class="p">.</span><span class="n">dwLowDateTime</span> <span class="o">&lt;&lt;</span> <span class="s">&#34; : &#34;</span> <span class="o">&lt;&lt;</span> <span class="n">ft</span><span class="p">.</span><span class="n">dwHighDateTime</span><span class="o">&lt;&lt;</span> <span class="s">&#34;:&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int64_t</span> <span class="n">low</span> <span class="o">=</span> <span class="n">ROTATE_LEFT</span><span class="p">(</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">ft</span><span class="p">.</span><span class="n">dwLowDateTime</span><span class="p">),</span> <span class="mi">4</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int64_t</span> <span class="n">high</span> <span class="o">=</span> <span class="n">ROTATE_LEFT</span><span class="p">(</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">ft</span><span class="p">.</span><span class="n">dwHighDateTime</span><span class="p">)</span> <span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">low</span>  <span class="o">&lt;&lt;</span> <span class="s">&#34;:&#34;</span> <span class="o">&lt;&lt;</span>  <span class="n">high</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><ul>
+<li>Generate all possible 4 bytes nonces wordlist.</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"> crunch <span class="m">4</span> <span class="m">4</span> <span class="s2">&#34;0123456789abcdef\!#&amp;*%GHIJ-lm+_&#34;</span>  &gt; passwd.txt
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">hashlib</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">MAPPINGS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="s1">&#39;3&#39;</span><span class="p">,</span> <span class="s1">&#39;4&#39;</span><span class="p">,</span> <span class="s1">&#39;5&#39;</span><span class="p">,</span> <span class="s1">&#39;6&#39;</span><span class="p">,</span> <span class="s1">&#39;7&#39;</span><span class="p">,</span> <span class="s1">&#39;8&#39;</span><span class="p">,</span> <span class="s1">&#39;9&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;!&#39;</span><span class="p">,</span> <span class="s1">&#39;#&#39;</span><span class="p">,</span> <span class="s1">&#39;&amp;&#39;</span><span class="p">,</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="s1">&#39;%&#39;</span><span class="p">,</span> <span class="s1">&#39;G&#39;</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="s1">&#39;J&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;l&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Extensions</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">PNG</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&#34;</span><span class="se">\x89\x50\x4E\x47\x0D\x0A\x1A\x0A</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">JPG</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&#34;</span><span class="se">\xff\xd8\xff</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">JPG_END</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&#34;</span><span class="se">\xff\xd9</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">WEBP</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&#34;RIFF</span><span class="se">\x08\x4E\x02\x00</span><span class="s2">&#34;</span> <span class="c1">## [4:8] -&gt; file size</span>
+</span></span><span class="line"><span class="cl">    <span class="n">RAR</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&#34;</span><span class="se">\x52\x61\x72\x21\x1A</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">GIF</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&#34;</span><span class="se">\x47\x49\x46\x38\x39\x61</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">MP4</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;ftyp&#39;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ZIP</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&#34;</span><span class="se">\x50\x4B\x03\x04\x14\x00\x06\x00</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">PDF</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;%PDF-1.&#39;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">check_header</span><span class="p">(</span><span class="n">buff</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">ext</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">dec</span> <span class="o">=</span> <span class="n">Decryptor</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">temp_key2</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s1">&#39;png&#39;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">res</span> <span class="o">=</span> <span class="n">dec</span><span class="p">(</span><span class="n">encbuff</span><span class="o">=</span><span class="n">buff</span><span class="p">[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">Extensions</span><span class="o">.</span><span class="n">PNG</span><span class="p">)],</span> <span class="n">key1</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">key2</span><span class="o">=</span><span class="n">temp_key2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">res</span> <span class="o">==</span> <span class="n">Extensions</span><span class="o">.</span><span class="n">PNG</span> <span class="p">:</span> <span class="k">return</span> <span class="kc">True</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s1">&#39;jpg&#39;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">res</span> <span class="o">=</span> <span class="n">dec</span><span class="p">(</span><span class="n">encbuff</span><span class="o">=</span><span class="n">buff</span><span class="p">[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">Extensions</span><span class="o">.</span><span class="n">JPG</span><span class="p">)],</span> <span class="n">key1</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">key2</span><span class="o">=</span><span class="n">temp_key2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">res</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="n">Extensions</span><span class="o">.</span><span class="n">JPG</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">res</span> <span class="o">=</span> <span class="n">dec</span><span class="p">(</span><span class="n">encbuff</span><span class="o">=</span><span class="n">buff</span><span class="p">,</span> <span class="n">key1</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">key2</span><span class="o">=</span><span class="n">temp_key2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span> <span class="o">==</span> <span class="n">Extensions</span><span class="o">.</span><span class="n">JPG_END</span> <span class="ow">and</span> <span class="p">(</span><span class="sa">b</span><span class="s1">&#39;EXIF&#39;</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">or</span> <span class="sa">b</span><span class="s1">&#39;JFIF&#39;</span> <span class="ow">in</span> <span class="n">res</span><span class="p">)):</span> <span class="k">return</span> <span class="kc">True</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s1">&#39;webp&#39;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">res</span> <span class="o">=</span> <span class="n">dec</span><span class="p">(</span><span class="n">encbuff</span><span class="o">=</span><span class="n">buff</span><span class="p">[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">Extensions</span><span class="o">.</span><span class="n">WEBP</span><span class="p">)],</span> <span class="n">key1</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">key2</span><span class="o">=</span><span class="n">temp_key2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">res</span> <span class="o">==</span> <span class="n">Extensions</span><span class="o">.</span><span class="n">WEBP</span><span class="p">:</span> <span class="k">return</span> <span class="kc">True</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s1">&#39;rar&#39;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">res</span> <span class="o">=</span> <span class="n">dec</span><span class="p">(</span><span class="n">encbuff</span><span class="o">=</span><span class="n">buff</span><span class="p">[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">Extensions</span><span class="o">.</span><span class="n">RAR</span><span class="p">)],</span> <span class="n">key1</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">key2</span><span class="o">=</span><span class="n">temp_key2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">res</span> <span class="o">==</span> <span class="n">Extensions</span><span class="o">.</span><span class="n">RAR</span><span class="p">:</span> <span class="k">return</span> <span class="kc">True</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span>  <span class="s1">&#39;gif&#39;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">res</span> <span class="o">=</span><span class="n">dec</span><span class="p">(</span><span class="n">encbuff</span><span class="o">=</span><span class="n">buff</span><span class="p">[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">Extensions</span><span class="o">.</span><span class="n">GIF</span><span class="p">)],</span> <span class="n">key1</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">key2</span><span class="o">=</span><span class="n">temp_key2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">res</span> <span class="o">==</span> <span class="n">Extensions</span><span class="o">.</span><span class="n">GIF</span><span class="p">:</span> <span class="k">return</span> <span class="kc">True</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">ext</span>  <span class="o">==</span> <span class="s1">&#39;zip&#39;</span> <span class="ow">or</span> <span class="n">ext</span> <span class="o">==</span> <span class="s1">&#39;docx&#39;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">res</span> <span class="o">=</span><span class="n">dec</span><span class="p">(</span><span class="n">encbuff</span><span class="o">=</span><span class="n">buff</span><span class="p">[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">Extensions</span><span class="o">.</span><span class="n">ZIP</span><span class="p">)],</span> <span class="n">key1</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">key2</span><span class="o">=</span><span class="n">temp_key2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">res</span> <span class="o">==</span> <span class="n">Extensions</span><span class="o">.</span><span class="n">ZIP</span><span class="p">:</span> <span class="k">return</span> <span class="kc">True</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s1">&#39;mp4&#39;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">res</span> <span class="o">=</span><span class="n">dec</span><span class="p">(</span><span class="n">encbuff</span><span class="o">=</span><span class="n">buff</span><span class="p">[:</span><span class="mi">32</span><span class="p">],</span> <span class="n">key1</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">key2</span><span class="o">=</span><span class="n">temp_key2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">res</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">8</span><span class="p">]</span> <span class="o">==</span> <span class="n">Extensions</span><span class="o">.</span><span class="n">MP4</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">res</span> <span class="o">=</span><span class="n">dec</span><span class="p">(</span><span class="n">encbuff</span><span class="o">=</span><span class="n">buff</span><span class="p">,</span> <span class="n">key1</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">key2</span><span class="o">=</span><span class="n">temp_key2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="sa">b</span><span class="s1">&#39;moov&#39;</span> <span class="ow">in</span> <span class="n">res</span> <span class="ow">and</span> <span class="sa">b</span><span class="s1">&#39;mdat&#39;</span> <span class="ow">in</span> <span class="n">res</span><span class="p">):</span> <span class="k">return</span> <span class="kc">True</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s1">&#39;pdf&#39;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">res</span> <span class="o">=</span> <span class="n">dec</span><span class="p">(</span><span class="n">encbuff</span><span class="o">=</span><span class="n">buff</span><span class="p">[:</span><span class="mi">7</span><span class="p">],</span> <span class="n">key1</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">key2</span><span class="o">=</span><span class="n">temp_key2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">res</span> <span class="o">==</span> <span class="n">Extensions</span><span class="o">.</span><span class="n">PDF</span><span class="p">:</span> <span class="k">return</span> <span class="kc">True</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">encrypt</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">rounds</span> <span class="o">=</span> <span class="mi">16</span>
+</span></span><span class="line"><span class="cl">    <span class="n">delta</span> <span class="o">=</span> <span class="mh">0x1A2B693C</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sumval</span> <span class="o">=</span> <span class="mh">0x00000000</span>
+</span></span><span class="line"><span class="cl">    <span class="n">keys</span> <span class="o">=</span>  <span class="p">[</span><span class="mh">0x1234f</span><span class="p">,</span> <span class="mh">0x1bc0d</span><span class="p">,</span> <span class="mh">0x80112</span><span class="p">,</span> <span class="mh">0x4ef50</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">v0</span><span class="p">,</span> <span class="n">v1</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">val</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rounds</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">sumval</span> <span class="o">+=</span> <span class="p">(</span><span class="n">delta</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">v0</span> <span class="o">=</span> <span class="p">((((</span> <span class="p">(</span><span class="n">v1</span> <span class="o">&lt;&lt;</span> <span class="mi">4</span><span class="p">)</span> <span class="o">+</span> <span class="n">keys</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">^</span> <span class="p">(</span><span class="n">v1</span> <span class="o">+</span> <span class="n">sumval</span> <span class="o">+</span> <span class="n">keys</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">^</span> <span class="p">((</span><span class="n">v1</span> <span class="o">&gt;&gt;</span> <span class="mi">5</span><span class="p">)</span> <span class="p">))</span> <span class="o">+</span> <span class="n">keys</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">v1</span> <span class="o">=</span> <span class="n">v0</span>
+</span></span><span class="line"><span class="cl">    <span class="n">val</span> <span class="o">=</span> <span class="n">v0</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">val</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">get_key1</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span><span class="p">(</span><span class="n">val</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">key</span> <span class="o">+=</span> <span class="n">MAPPINGS</span><span class="p">[</span><span class="n">val</span> <span class="o">%</span> <span class="mi">30</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="n">val</span> <span class="o">//=</span> <span class="mi">30</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">key</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">md5digestString</span><span class="p">(</span><span class="n">a</span><span class="p">):</span> <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Decryptor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">key1</span> <span class="p">:</span> <span class="nb">bytes</span>  <span class="o">=</span> <span class="kc">None</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">key2</span> <span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="kc">None</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">update_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key1</span> <span class="p">,</span> <span class="n">key2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">key1</span> <span class="o">=</span> <span class="n">key1</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">key2</span> <span class="o">=</span> <span class="n">key2</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">decrypt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encbuff</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">encbuff</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">)):</span>
+</span></span><span class="line"><span class="cl">            <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">[</span><span class="n">_</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">encbuff</span><span class="p">[</span><span class="n">_</span><span class="p">]</span> <span class="o">^</span> <span class="bp">self</span><span class="o">.</span><span class="n">key1</span><span class="p">[</span><span class="n">_</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">key1</span><span class="p">)]</span> <span class="o">^</span> <span class="bp">self</span><span class="o">.</span><span class="n">key2</span><span class="p">[</span><span class="n">_</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">key2</span><span class="p">)])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key1</span> <span class="p">:</span> <span class="nb">bytes</span> <span class="p">,</span> <span class="n">key2</span> <span class="p">:</span> <span class="nb">bytes</span> <span class="p">,</span> <span class="n">encbuff</span> <span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytearray</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">key1</span> <span class="o">==</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">key2</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="bp">self</span><span class="o">.</span><span class="n">update_keys</span><span class="p">(</span><span class="n">key1</span><span class="o">=</span><span class="n">key1</span><span class="p">,</span> <span class="n">key2</span><span class="o">=</span><span class="n">key2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span><span class="n">encbuff</span><span class="o">=</span><span class="n">encbuff</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">base_dir</span> <span class="o">=</span> <span class="s2">&#34;encrypted/&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;0cf51fbc.tort&#39;</span><span class="p">,</span><span class="s1">&#39;a917438f.tort&#39;</span><span class="p">,</span><span class="s1">&#39;3a7fab71.tort&#39;</span><span class="p">,</span> <span class="s1">&#39;bb292337.tort&#39;</span><span class="p">,</span> <span class="s1">&#39;24819686.tort&#39;</span><span class="p">,</span> <span class="s1">&#39;7a6c7166.tort&#39;</span><span class="p">,</span> <span class="s1">&#39;185c65f8.tort&#39;</span><span class="p">,</span> <span class="s1">&#39;cc876a3b.tort&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ext</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;pdf&#39;</span><span class="p">,</span><span class="s1">&#39;gif&#39;</span><span class="p">,</span> <span class="s1">&#39;webp&#39;</span><span class="p">,</span> <span class="s1">&#39;docx&#39;</span><span class="p">,</span> <span class="s1">&#39;jpg&#39;</span><span class="p">,</span> <span class="s1">&#39;rar&#39;</span><span class="p">,</span> <span class="s1">&#39;mp4&#39;</span><span class="p">,</span> <span class="s1">&#39;png&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">dec_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;15005-39026.pdf&#39;</span><span class="p">,</span><span class="s1">&#39;binary-01.gif&#39;</span><span class="p">,</span><span class="s1">&#39;Everest Vista.webp&#39;</span><span class="p">,</span><span class="s1">&#39;Paranormal Phenomenon.docx&#39;</span><span class="p">,</span><span class="s1">&#39;so-cappy.jpg&#39;</span><span class="p">,</span><span class="s1">&#39;stuffs.rar&#39;</span><span class="p">,</span><span class="s1">&#39;ySq12b0T.mp4&#39;</span><span class="p">,</span><span class="s1">&#39;vl36hkjkzbh91.png&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">time_exe</span> <span class="o">=</span> <span class="s2">&#34;/mnt/e/filetime.exe&#34;</span>  <span class="c1"># Compiled exe path</span>
+</span></span><span class="line"><span class="cl">    <span class="n">timestamps</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&#34;2010 2 2 26 12 38 43 0&#34;</span><span class="p">,</span><span class="s1">&#39;1995 2 2 27 2 11 42 0&#39;</span><span class="p">,</span> <span class="s1">&#39;1990 8 2 28 21 6 35 0&#39;</span><span class="p">,</span><span class="s1">&#39;1993 7 2 16 17 10 46 0&#39;</span><span class="p">,</span><span class="s1">&#39;2001 4 2 19 8 27 45 0&#39;</span><span class="p">,</span><span class="s1">&#39;2009 11 2 22 17 5 55 0&#39;</span><span class="p">,</span><span class="s1">&#39;2007 7 2 28 3 27 33 0&#39;</span><span class="p">,</span><span class="s1">&#39;1985 3 2 4 16 23 53 0&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">w</span> <span class="o">=</span> <span class="n">Decryptor</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;File : &#34;</span><span class="p">,</span> <span class="n">dec_files</span><span class="p">[</span><span class="n">_</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">enc_buff</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;</span><span class="si">{</span><span class="n">base_dir</span><span class="si">}{</span><span class="n">files</span><span class="p">[</span><span class="n">_</span><span class="p">]</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">,</span> <span class="s2">&#34;rb&#34;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()[</span><span class="mi">8</span><span class="p">:]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">key1</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">t</span> <span class="o">=</span> <span class="n">timestamps</span><span class="p">[</span><span class="n">_</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&#34; &#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">out</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;</span><span class="si">{</span><span class="n">time_exe</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">t</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">t</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">t</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">t</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">t</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">t</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&#34;:&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">out</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">key1</span> <span class="o">+=</span> <span class="n">get_key1</span><span class="p">((</span><span class="n">out</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">),</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">key1</span> <span class="o">+=</span> <span class="n">get_key1</span><span class="p">((</span><span class="n">out</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span> <span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">key1</span> <span class="o">+=</span> <span class="n">get_key1</span><span class="p">((</span><span class="n">encrypt</span><span class="p">((</span><span class="n">out</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">out</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">))</span> <span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">key1</span> <span class="o">+=</span> <span class="n">get_key1</span><span class="p">((</span><span class="n">encrypt</span><span class="p">((</span><span class="n">out</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">out</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">))</span> <span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">key1</span> <span class="o">+=</span> <span class="n">get_key1</span><span class="p">((</span><span class="n">encrypt</span><span class="p">((</span><span class="n">out</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">out</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">))</span> <span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">nonce</span> <span class="o">=</span> <span class="kc">None</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">nonce</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">passw</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&#34;passwd.txt&#34;</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">while</span><span class="p">(</span><span class="n">t</span><span class="o">:=</span> <span class="n">passw</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()):</span>
+</span></span><span class="line"><span class="cl">                <span class="n">temp</span> <span class="o">=</span> <span class="n">key1</span> <span class="o">+</span> <span class="n">t</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">                <span class="n">status</span> <span class="o">=</span> <span class="n">check_header</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">enc_buff</span><span class="p">,</span> <span class="n">temp</span><span class="p">,</span><span class="n">ext</span><span class="p">[</span><span class="n">_</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">nonce</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;[+] Found for </span><span class="si">{</span><span class="n">files</span><span class="p">[</span><span class="n">_</span><span class="p">]</span><span class="si">}</span><span class="s1"> :: nonce : </span><span class="si">{</span><span class="n">nonce</span><span class="si">}</span><span class="s1"> key1 : </span><span class="si">{</span><span class="n">key1</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span><span class="si">}{</span><span class="n">nonce</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">key1</span> <span class="o">+=</span> <span class="n">nonce</span>
+</span></span><span class="line"><span class="cl">        <span class="n">key2</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="n">key1</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="n">dec</span> <span class="o">=</span> <span class="n">w</span><span class="p">(</span><span class="n">encbuff</span><span class="o">=</span><span class="n">enc_buff</span><span class="p">,</span> <span class="n">key1</span><span class="o">=</span> <span class="n">key1</span><span class="p">,</span> <span class="n">key2</span><span class="o">=</span> <span class="n">key2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;decrypted/</span><span class="si">{</span><span class="n">dec_files</span><span class="p">[</span><span class="n">_</span><span class="p">]</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span>
+</span></span></code></pre></div><p><img loading="lazy" src="images/image-37.png" alt="AltText"  />
+</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="n">da8ed3e98eb5a2ba769ea60b48b0f6eb</span>  <span class="mi">15005</span><span class="o">-</span><span class="mf">39026.</span><span class="n">pdf</span>
+</span></span><span class="line"><span class="cl"><span class="n">d58621ce6e560ba1c045892aef0b5f8b</span>  <span class="n">binary</span><span class="o">-</span><span class="mf">01.</span><span class="n">gif</span>
+</span></span><span class="line"><span class="cl"><span class="mi">683092</span><span class="n">bd6640e62a3dc49b412da4fe71</span>  <span class="n">Everest</span> <span class="n">Vista</span><span class="o">.</span><span class="n">webp</span>
+</span></span><span class="line"><span class="cl"><span class="mi">11</span><span class="n">d9788ce48371a6ef230892ada1554d</span>  <span class="n">Paranormal</span> <span class="n">Phenomenon</span><span class="o">.</span><span class="n">docx</span>
+</span></span><span class="line"><span class="cl"><span class="n">bc9a53c83976e9779bce2d0635f1bbbe</span>  <span class="n">so</span><span class="o">-</span><span class="n">cappy</span><span class="o">.</span><span class="n">jpg</span>
+</span></span><span class="line"><span class="cl"><span class="mi">111</span><span class="n">fb8624db9365af79e6ec446b00eac</span>  <span class="n">stuffs</span><span class="o">.</span><span class="n">rar</span>
+</span></span><span class="line"><span class="cl"><span class="mi">76675928</span><span class="n">a19bcc5602ef81c7a833d3fa</span>  <span class="n">vl36hkjkzbh91</span><span class="o">.</span><span class="n">png</span>
+</span></span><span class="line"><span class="cl"><span class="mi">4</span><span class="n">d9c5a006c4315625c86d94a8fd9fd2e</span>  <span class="n">ySq12b0T</span><span class="o">.</span><span class="n">mp4</span>
+</span></span></code></pre></div><h3 id="final-ans">Final Ans<a hidden class="anchor" aria-hidden="true" href="#final-ans">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="p">[</span>
+</span></span><span class="line"><span class="cl">  <span class="p">[</span><span class="s1">&#39;da8ed3e98eb5a2ba769ea60b48b0f6eb&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">  <span class="p">[</span><span class="s1">&#39;d58621ce6e560ba1c045892aef0b5f8b&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">  <span class="p">[</span><span class="s1">&#39;683092bd6640e62a3dc49b412da4fe71&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">  <span class="p">[</span><span class="s1">&#39;11d9788ce48371a6ef230892ada1554d&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">  <span class="p">[</span><span class="s1">&#39;bc9a53c83976e9779bce2d0635f1bbbe&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">  <span class="p">[</span><span class="s1">&#39;111fb8624db9365af79e6ec446b00eac&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">  <span class="p">[</span><span class="s1">&#39;76675928a19bcc5602ef81c7a833d3fa&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">  <span class="p">[</span><span class="s1">&#39;4d9c5a006c4315625c86d94a8fd9fd2e&#39;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl"><span class="p">]</span>
+</span></span></code></pre></div><p><strong>Flag</strong> : <code>bi0sctf{ReAL_1_w0nd3r_wHa7_t1m3_is_17_14dbc653fdb414c1d}</code></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="https://5h4rrK.github.io/tags/digital-forensics/">Digital-Forensics</a></li>
+      <li><a href="https://5h4rrK.github.io/tags/filesystem/">FileSystem</a></li>
+      <li><a href="https://5h4rrK.github.io/tags/windows/">Windows</a></li>
+      <li><a href="https://5h4rrK.github.io/tags/ctf/">CTF</a></li>
+      <li><a href="https://5h4rrK.github.io/tags/log-analysis/">Log-Analysis</a></li>
+      <li><a href="https://5h4rrK.github.io/tags/forensics/">Forensics</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="next" href="https://5h4rrK.github.io/posts/keyboard-pcap/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Network-KeyLogger</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share ReAL-File-System on x"
+            href="https://x.com/intent/tweet/?text=ReAL-File-System&amp;url=https%3a%2f%2f5h4rrK.github.io%2fposts%2fresilient-file-system%2f&amp;hashtags=Digital-Forensics%2cFileSystem%2cWindows%2cctf%2cLog-Analysis%2cForensics">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share ReAL-File-System on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2f5h4rrK.github.io%2fposts%2fresilient-file-system%2f&amp;title=ReAL-File-System&amp;summary=ReAL-File-System&amp;source=https%3a%2f%2f5h4rrK.github.io%2fposts%2fresilient-file-system%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share ReAL-File-System on reddit"
+            href="https://reddit.com/submit?url=https%3a%2f%2f5h4rrK.github.io%2fposts%2fresilient-file-system%2f&title=ReAL-File-System">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share ReAL-File-System on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2f5h4rrK.github.io%2fposts%2fresilient-file-system%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share ReAL-File-System on whatsapp"
+            href="https://api.whatsapp.com/send?text=ReAL-File-System%20-%20https%3a%2f%2f5h4rrK.github.io%2fposts%2fresilient-file-system%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share ReAL-File-System on telegram"
+            href="https://telegram.me/share/url?text=ReAL-File-System&amp;url=https%3a%2f%2f5h4rrK.github.io%2fposts%2fresilient-file-system%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share ReAL-File-System on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=ReAL-File-System&u=https%3a%2f%2f5h4rrK.github.io%2fposts%2fresilient-file-system%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2024 <a href="https://5h4rrK.github.io/">~/home/5h4rrK $</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

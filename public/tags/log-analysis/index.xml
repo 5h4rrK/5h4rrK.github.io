@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Log-Analysis on ~/home/5h4rrK $</title>
+    <link>https://5h4rrK.github.io/tags/log-analysis/</link>
+    <description>Recent content in Log-Analysis on ~/home/5h4rrK $</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Wed, 28 Feb 2024 23:40:43 +0530</lastBuildDate>
+    <atom:link href="https://5h4rrK.github.io/tags/log-analysis/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>ReAL-File-System</title>
+      <link>https://5h4rrK.github.io/posts/resilient-file-system/</link>
+      <pubDate>Wed, 28 Feb 2024 23:40:43 +0530</pubDate>
+      <guid>https://5h4rrK.github.io/posts/resilient-file-system/</guid>
+      <description>Log Analysis of Resilient File Sytem</description>
+    </item>
+  </channel>
+</rss>
