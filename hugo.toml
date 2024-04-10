@@ -1,7 +1,7 @@
 baseURL = "https://5h4rrK.github.io/"
 languageCode = "en-us"
-title = "~/home/5h4rrK $"
-theme = "PaperMod"
+title = "5h4rrK "
+theme = "hugo-PaperMod"
 enableInlineShortcodes = true
 enableRobotsTXT = true
 buildDrafts = false
@@ -9,7 +9,7 @@ buildFuture = false
 buildExpired = false
 enableEmoji = true
 pygmentsUseClasses = true
-mainsections = [ "posts", "papermod" ]
+mainsections = [ "posts", "hugo-PaperMod" ]
 
 [minify]
 disableXML = true
@@ -111,4 +111,3 @@ disableInlineCSS = true
 
 [services.twitter]
 disableInlineCSS = true
-
